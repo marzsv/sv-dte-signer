@@ -1,0 +1,111 @@
+{
+    "nit": "12345678901234",
+    "passwordPri": "testpassword",
+    "dteJson": {
+        "identificacion": {
+            "version": 1,
+            "ambiente": "00",
+            "tipoDte": "01",
+            "numeroControl": "DTE-01-00000001-000000000000001",
+            "codigoGeneracion": "A1B2C3D4-E5F6-7890-1234-567890ABCDEF",
+            "tipoModelo": 1,
+            "tipoOperacion": 1,
+            "tipoContingencia": null,
+            "motivoContin": null,
+            "fecEmi": "2025-07-20",
+            "horEmi": "10:30:00",
+            "tipoMoneda": "USD"
+        },
+        "emisor": {
+            "nit": "12345678901234",
+            "nrc": "123456",
+            "nombre": "EMPRESA DE EJEMPLO S.A. DE C.V.",
+            "codActividad": "62020",
+            "descActividad": "Actividades de consultoría en informática y de gestión de instalaciones informáticas",
+            "nombreComercial": "Empresa Ejemplo",
+            "tipoEstablecimiento": "01",
+            "direccion": {
+                "departamento": "06",
+                "municipio": "05",
+                "complemento": "Colonia Escalón, Edificio Torre Roble, Nivel 5"
+            },
+            "telefono": "2234-5678",
+            "correo": "facturacion@empresaejemplo.com"
+        },
+        "receptor": {
+            "nit": "98765432109876",
+            "nrc": "987654",
+            "nombre": "CLIENTE EJEMPLO S.A. DE C.V.",
+            "codActividad": "46900",
+            "descActividad": "Comercio al por mayor no especializado",
+            "direccion": {
+                "departamento": "06",
+                "municipio": "01",
+                "complemento": "Centro Comercial Multiplaza, Local 150"
+            },
+            "telefono": "2765-4321",
+            "correo": "compras@clienteejemplo.com"
+        },
+        "cuerpoDocumento": [
+            {
+                "numItem": 1,
+                "tipoItem": 2,
+                "numeroDocumento": null,
+                "cantidad": 2,
+                "codigo": "SERV001",
+                "codTributo": null,
+                "uniMedida": 59,
+                "descripcion": "Servicio de consultoría en sistemas",
+                "precioUni": 500.00,
+                "montoDescu": 0.00,
+                "ventaNoSuj": 0.00,
+                "ventaExenta": 0.00,
+                "ventaGravada": 1000.00,
+                "tributos": ["20"],
+                "psv": 0.00,
+                "noGravado": 0.00
+            }
+        ],
+        "resumen": {
+            "totalNoSuj": 0.00,
+            "totalExenta": 0.00,
+            "totalGravada": 1000.00,
+            "subTotalVentas": 1000.00,
+            "descuNoSuj": 0.00,
+            "descuExenta": 0.00,
+            "descuGravada": 0.00,
+            "porcentajeDescuento": 0.00,
+            "totalDescu": 0.00,
+            "tributos": [
+                {
+                    "codigo": "20",
+                    "descripcion": "Impuesto al Valor Agregado 13%",
+                    "valor": 130.00
+                }
+            ],
+            "subTotal": 1000.00,
+            "ivaPerci1": 0.00,
+            "ivaRete1": 0.00,
+            "reteRenta": 0.00,
+            "montoTotalOperacion": 1130.00,
+            "totalNoGravado": 0.00,
+            "totalPagar": 1130.00,
+            "totalLetras": "MIL CIENTO TREINTA 00/100 DÓLARES",
+            "totalIva": 130.00,
+            "saldoFavor": 0.00,
+            "condicionOperacion": 1,
+            "pagos": [
+                {
+                    "codigo": "01",
+                    "montoPago": 1130.00,
+                    "referencia": null,
+                    "plazo": null,
+                    "periodo": null
+                }
+            ],
+            "numPagoElectronico": null
+        },
+        "extension": null,
+        "apendice": null
+    }
+}
