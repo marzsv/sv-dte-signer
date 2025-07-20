@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<certificate>
+    <activo>true</activo>
+    <verificado>true</verificado>
+    <passwordHash>e9e633097ab9ceb3e48ec3f70ee2beba41d05d5420efee5da85f97d97005727587fda33ef4ff2322088f4c79e8133cc9cd9f3512f4d3a303cbdb5bc585415a00</passwordHash>
+    <privateKey><![CDATA[-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDE8g23AR8wm1gn
+HIt0I+AOxJIrWODKuSc6nB+IjbvvbL0c2Uzixwb6Q8rPe0jfQzO3DEAKSdlH+v55
+LulT9DKvcuv8mOdFyn4t0DDgqCYwNpm4se8tKv4OM5g56H4Cta8YvmA1HX0gs+lQ
+458rrWcI1Ke5XA73OO7ecGHUJHwiuUrL7iNeyC1LHTSBiHrhThufoJOLK1EGXwgy
+H6WkQQBL1WLd0tuWFJ/QjtxLqD3aQ/FticfolNX+g+V3//eo5x/TIwXhnj4I/Ytm
+9mG9AjEo3kFy0tmUSVRZLzv4K/IIQXkf7pDB2b+i/cL7c1WCBxxFfRQee9HopdYL
+iE88yO35AgMBAAECggEABiOxj8HmMgK1tcprAnzX0D4KfHVx1H//HBGf3gblE+qk
+3pBbmDoyGn0ghmVGeUdEBnHIUUnKDzdg1XBD780OA3AmsSInG4LbehwiWe6D+j7J
+fft2BEdx0gmDtlJsEzOMuM2+fAlmTC2vmUjvPlJSgvD2JY4cHVLWB3MjaZSVlhN4
+inh43cifvadz+JgO2omzaVwR8ep5kVRwcV6i7q4ocT3/FwoyrXKWCMrOwpRsiUiI
+i9e+JA2ntsZc/dALR3TgOzl2YRUam4hrtp0Gby537v6f/iPEjKIZTKmpaA5CPDY+
+WT89SDfdWjoFJ6S4/draotrqgyfDUR1pNAj9ciwMDQKBgQD9U805ub0GkfmTMxgj
+07RdVEFT7glOI5EBcQn7bixBtoLX/p6WmxvOlO3LE2wHGiRvooTM9VGR96IcKkmC
+Mn7mNlZOakJYRVyoMPfMijmVo7Csgi9Ky6bLiiqJwXu10j62/eoNkWmre3vBO5iY
+dOrXCsQooCFmtnC5BxsyzlAL+wKBgQDHBfkmApXsq/UwRkpQ9rmz4u6Pb3gJLPwq
+3cUOKmqQS5Zqqem/cttPXlvURb7EoiqOJrUJguOPqGRCU7kUKZM+fKJptVMqOgn9
+BQhZxwhfsPcTRyFHTyHaibqhtWonGcHHlboDshxtnH8zyeTvGek1mkL2AqRKQYdm
+Q+6d+kB3mwKBgCus3g4cwsU2N6Q0Q+4xWsBYfWbd/Ea3hRGNjp4FsaWmtMpOgMMQ
+fOvR62l+sLpMvIluqJy5ktWqrw1SERhcYlqIdbrRQRz84Guy/ZYLIsB010n2q/am
+Q9yFtq3HaO/BDsT34/lw35oMERsQjk+CoNZwab9jVD7kJ20PF5Zb0ZsvAoGAU+5q
+8eKpQ1QJZMBf2uER05DiNk81+fikp5c64Qx2QEAAQR9C2mAfqMsMQure1qHk/GnK
+cyZlvVGwZmBUbvJRjEqXW6kCV45+Y9vZd7L+DwzcRZ77o8z1Y+otcMDG8ZJlLDwy
+ZBia8IbNBhQgncz5kodpscHPcxlLdo8zdB/zS/0CgYEAzYdA/xqMKD6k/yt1FkR0
+137ZXgtVZ/423GD63KuiMRCqn/q4vDGESDVrklhbsna2RdNgKhTk9Mo8OYRpoRUT
+5y0FYS9qxIaRHiQP0iKD8DjeWnbHQvuU/H84Ngwz3KaKF0U2/b7g6gOd/oW+31jx
+pQ3RiqCfeNEZflEXdhf/DYs=
+-----END PRIVATE KEY-----
+]]></privateKey>
+</certificate>

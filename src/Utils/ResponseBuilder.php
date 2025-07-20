@@ -15,6 +15,8 @@ class ResponseBuilder
 
     /**
      * Build a success response with the signed JWS
+     * 
+     * @return array<string, mixed>
      */
     public static function success(string $signedJws, string $message = self::SUCCESS_MESSAGE): array
     {
@@ -27,6 +29,8 @@ class ResponseBuilder
 
     /**
      * Build an error response from an exception
+     * 
+     * @return array<string, mixed>
      */
     public static function error(DteSignerException $exception): array
     {
@@ -35,6 +39,9 @@ class ResponseBuilder
 
     /**
      * Build a generic error response
+     * 
+     * @param array<string> $errors
+     * @return array<string, mixed>
      */
     public static function genericError(
         string $message,

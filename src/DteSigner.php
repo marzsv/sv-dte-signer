@@ -19,9 +19,8 @@ use DteSigner\Validators\RequestValidator;
  */
 class DteSigner
 {
-    private const DEFAULT_CERTIFICATE_DIRECTORY = 'uploads';
+    private const DEFAULT_CERTIFICATE_DIRECTORY = 'certificates';
 
-    private string $certificateDirectory;
     private RequestValidator $requestValidator;
     private CertificateLoader $certificateLoader;
     private JwsSigner $jwsSigner;
@@ -35,7 +34,6 @@ class DteSigner
         ?CertificateLoader $certificateLoader = null,
         ?JwsSigner $jwsSigner = null
     ) {
-        $this->certificateDirectory = $certificateDirectory;
         $this->requestValidator = $requestValidator ?? new RequestValidator();
         $this->certificateLoader = $certificateLoader ?? new CertificateLoader($certificateDirectory);
         $this->jwsSigner = $jwsSigner ?? new JwsSigner();
@@ -44,8 +42,8 @@ class DteSigner
     /**
      * Sign a DTE document
      * 
-     * @param array|string $input Either an array with signing data or a file path to JSON
-     * @return array Response array with success/error information
+     * @param array<string, mixed>|string $input Either an array with signing data or a file path to JSON
+     * @return array<string, mixed> Response array with success/error information
      */
     public function sign(array|string $input): array
     {
@@ -80,6 +78,8 @@ class DteSigner
     /**
      * Parse input data from array or file path
      * 
+     * @param array<string, mixed>|string $input
+     * @return array<string, mixed>
      * @throws ValidationException
      */
     private function parseInput(array|string $input): array
@@ -94,6 +94,7 @@ class DteSigner
     /**
      * Load request data from JSON file
      * 
+     * @return array<string, mixed>
      * @throws ValidationException
      */
     private function loadFromFile(string $filePath): array
@@ -128,6 +129,8 @@ class DteSigner
 
     /**
      * Clear sensitive data from memory for security
+     * 
+     * @param array<string, mixed> $data
      */
     private function clearSensitiveData(array $data): void
     {

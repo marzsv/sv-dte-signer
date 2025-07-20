@@ -3,7 +3,3 @@ parameters:
     paths:
         - src
         - tests
-    
-    ignoreErrors:
-        # Allow mixed types in JWT library interactions
-        - '#Call to method .* on an unknown class Lcobucci\\JWT\\Token#'

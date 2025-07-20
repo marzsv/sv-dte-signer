@@ -15,7 +15,7 @@ class MockCertificateGenerator
 {
     private const TEST_NIT = '12345678901234';
     private const TEST_PASSWORD = 'testpassword';
-    private const CERTIFICATE_DIR = __DIR__ . '/../uploads';
+    private const CERTIFICATE_DIR = __DIR__ . '/../certificates';
 
     public function generate(): void
     {

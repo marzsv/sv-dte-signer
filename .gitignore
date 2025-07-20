@@ -40,14 +40,14 @@ phpunit.xml.bak
 .env.test
 
 # Certificate files (production)
-# NOTE: The uploads/ directory contains mock certificates for testing
+# NOTE: The certificates/ directory contains mock certificates for testing
 # In production, exclude real certificates from version control
-uploads/*.crt
-uploads/*.p12
-uploads/*.pem
-uploads/*.key
-!uploads/.gitkeep
-!uploads/12345678901234.crt
+certificates/*.crt
+certificates/*.p12
+certificates/*.pem
+certificates/*.key
+!certificates/.gitkeep
+!certificates/12345678901234.crt
 
 # Cache and temporary files
 /cache/

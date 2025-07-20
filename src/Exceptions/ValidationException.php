@@ -11,6 +11,9 @@ class ValidationException extends DteSignerException
 {
     private const VALIDATION_ERROR_CODE = 'COD_803';
 
+    /**
+     * @param array<string> $errors
+     */
     public function __construct(
         string $message = 'Validation error',
         array $errors = [],

@@ -139,7 +139,7 @@ $response = $signer->sign($request);
 
 2. **File Naming**: Certificate files must be named `{NIT}.crt` (e.g., `12345678901234.crt`)
 
-3. **Directory**: Place certificates in the `uploads/` directory or specify a custom path
+3. **Directory**: Place certificates in the `certificates/` directory or specify a custom path
 
 ## API Reference
 
@@ -148,7 +148,7 @@ $response = $signer->sign($request);
 #### Constructor
 
 ```php
-public function __construct(string $certificateDirectory = 'uploads')
+public function __construct(string $certificateDirectory = 'certificates')
 ```
 
 **Parameters:**
@@ -329,7 +329,7 @@ src/
 └── Utils/                     # Utility classes
 examples/                      # Working examples
 tests/                         # PHPUnit tests
-uploads/                       # Default certificate directory
+certificates/                  # Default certificate directory
 ```
 
 ### Code Style

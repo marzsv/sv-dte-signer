@@ -14,6 +14,7 @@ class CertificateValidator
     /**
      * Validate certificate data from parsed XML
      * 
+     * @param array<string, mixed> $certificateData
      * @throws CertificateException
      */
     public function validate(array $certificateData, string $providedPassword): void
@@ -25,6 +26,8 @@ class CertificateValidator
 
     /**
      * Validate certificate is active and verified
+     * 
+     * @param array<string, mixed> $certificateData
      */
     private function validateCertificateStatus(array $certificateData): void
     {
@@ -39,6 +42,8 @@ class CertificateValidator
 
     /**
      * Validate private key is present
+     * 
+     * @param array<string, mixed> $certificateData
      */
     private function validatePrivateKey(array $certificateData): void
     {
@@ -49,6 +54,8 @@ class CertificateValidator
 
     /**
      * Validate password matches the stored hash
+     * 
+     * @param array<string, mixed> $certificateData
      */
     private function validatePassword(array $certificateData, string $providedPassword): void
     {

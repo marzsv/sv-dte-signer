@@ -1,3 +1,0 @@
-# This file ensures the uploads directory is kept in version control
-# The uploads directory is used for storing certificate files
-# Mock certificates for testing are included, but production certificates should be excluded

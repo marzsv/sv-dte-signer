@@ -91,7 +91,7 @@ Current implementations rely on a Java application from the Ministry of Finance,
   - Optional fields: passwordPub, nombreDocumento, etc., as per spec section 4.
 
 - **Certificate Management**:
-  - Load certificate from `{NIT}.crt` in a configurable directory (default: "uploads").
+  - Load certificate from `{NIT}.crt` in a configurable directory (default: "certificates").
   - Parse XML structure using SimpleXML or DOMDocument.
   - Validate: activo=true, verificado=true, privateKey present, password hash match (SHA-512).
 
@@ -112,7 +112,7 @@ The SDK will expose a primary class `DteSigner` with methods:
 namespace DteSigner;
 
 class DteSigner {
-    public function __construct(string $certDir = 'uploads') {
+    public function __construct(string $certDir = 'certificates') {
         // Initialize with certificate directory
     }
 

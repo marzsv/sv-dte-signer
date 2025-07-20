@@ -14,8 +14,12 @@ class DteSignerException extends Exception
     private const DEFAULT_ERROR_CODE = 'COD_001';
 
     private string $errorCode;
+    /** @var array<string> */
     private array $errors;
 
+    /**
+     * @param array<string> $errors
+     */
     public function __construct(
         string $message = '',
         string $errorCode = self::DEFAULT_ERROR_CODE,
@@ -33,11 +37,17 @@ class DteSignerException extends Exception
         return $this->errorCode;
     }
 
+    /**
+     * @return array<string>
+     */
     public function getErrors(): array
     {
         return $this->errors;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [

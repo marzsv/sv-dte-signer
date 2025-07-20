@@ -20,12 +20,21 @@ class JwsSigner
     /**
      * Sign DTE JSON data and return JWS compact serialization
      * 
+     * @param array<string, mixed> $dteJson
      * @throws DteSignerException
      */
     public function sign(array $dteJson, string $privateKey): string
     {
         try {
             $payload = $this->preparePayload($dteJson);
+            
+            if (empty($privateKey)) {
+                throw new DteSignerException(
+                    'Private key cannot be empty',
+                    'COD_815'
+                );
+            }
+            
             $key = InMemory::plainText($privateKey);
             $signer = new Sha512();
             
@@ -52,6 +61,8 @@ class JwsSigner
 
     /**
      * Prepare DTE JSON as UTF-8 pretty-printed string
+     * 
+     * @param array<string, mixed> $dteJson
      */
     private function preparePayload(array $dteJson): string
     {

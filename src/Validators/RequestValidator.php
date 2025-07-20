@@ -16,11 +16,13 @@ class RequestValidator
     private const MAX_PASSWORD_LENGTH = 100;
     private const NIT_PATTERN = '/^\d{14}$/';
 
+    /** @var array<string> */
     private array $requiredFields = ['nit', 'passwordPri', 'dteJson'];
 
     /**
      * Validate a signing request
      * 
+     * @param array<string, mixed> $request
      * @throws ValidationException
      */
     public function validate(array $request): void
@@ -39,6 +41,9 @@ class RequestValidator
 
     /**
      * Validate that all required fields are present
+     * 
+     * @param array<string, mixed> $request
+     * @return array<string>
      */
     private function validateRequiredFields(array $request): array
     {
@@ -55,6 +60,8 @@ class RequestValidator
 
     /**
      * Validate NIT format (must be 14 digits)
+     * 
+     * @return array<string>
      */
     private function validateNit(string $nit): array
     {
@@ -73,6 +80,8 @@ class RequestValidator
 
     /**
      * Validate password length (8-100 characters)
+     * 
+     * @return array<string>
      */
     private function validatePassword(string $password): array
     {
@@ -92,8 +101,10 @@ class RequestValidator
 
     /**
      * Validate DTE JSON is not null
+     * 
+     * @return array<string>
      */
-    private function validateDteJson($dteJson): array
+    private function validateDteJson(mixed $dteJson): array
     {
         $errors = [];
 

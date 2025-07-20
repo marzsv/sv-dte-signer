@@ -15,6 +15,7 @@ class CertificateParser
     /**
      * Parse XML certificate content and extract required data
      * 
+     * @return array<string, mixed>
      * @throws CertificateException
      */
     public function parse(string $xmlContent): array

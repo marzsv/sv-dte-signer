@@ -31,6 +31,7 @@ class CertificateLoader
     /**
      * Load and validate certificate for the given NIT
      * 
+     * @return array<string, mixed>
      * @throws CertificateException
      */
     public function loadCertificate(string $nit, string $password): array
