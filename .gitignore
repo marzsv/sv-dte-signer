@@ -1,0 +1,103 @@
+# Composer
+/vendor/
+composer.lock
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# PHP Storm
+.phpstorm.meta.php
+_ide_helper.php
+_ide_helper_models.php
+
+# Test coverage and reports
+/tests/coverage/
+/tests/.cache/
+.phpunit.result.cache
+phpunit.xml.bak
+phpunit.xml
+
+# Logs
+*.log
+/logs/
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.test
+
+# Certificate files (production)
+# NOTE: The certificates/ directory contains mock certificates for testing
+# In production, exclude real certificates from version control
+certificates/*.crt
+certificates/*.p12
+certificates/*.pem
+certificates/*.key
+!certificates/.gitkeep
+!certificates/12345678901234.crt
+
+# Cache and temporary files
+/cache/
+/tmp/
+*.tmp
+*.cache
+
+# Build artifacts
+/build/
+/dist/
+
+# Package files
+*.tar.gz
+*.zip
+*.rar
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Configuration files that might contain secrets
+config/production.php
+config/secrets.php
+
+# Documentation build
+/docs/build/
+
+# PHPStan cache
+.phpstan.cache
+
+# Psalm cache
+.psalm/
+
+# PHP CS Fixer cache
+.php-cs-fixer.cache
+
+# Local development overrides
+docker-compose.override.yml
+.docker/
+
+# Backup files
+*.bak
+*.backup
+
+.vendor/

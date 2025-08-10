@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
+    bootstrap="vendor/autoload.php"
+    colors="true"
+    executionOrder="depends,defects"
+    failOnRisky="true"
+    failOnWarning="true"
+    stopOnFailure="false"
+    cacheDirectory="tests/.cache"
+>
+    <php>
+        <ini name="display_errors" value="1"/>
+        <ini name="error_reporting" value="-1"/>
+        <ini name="memory_limit" value="-1"/>
+    </php>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+        <exclude>
+            <directory>src/*/Tests</directory>
+        </exclude>
+    </source>
+    <coverage
+        cacheDirectory="tests/.cache/coverage"
+    >
+        <report>
+            <html outputDirectory="tests/coverage/html"/>
+            <text outputFile="tests/coverage/text.txt"/>
+            <clover outputFile="tests/coverage/clover.xml"/>
+        </report>
+    </coverage>
+    <logging>
+        <junit outputFile="tests/coverage/junit.xml"/>
+    </logging>
+</phpunit>

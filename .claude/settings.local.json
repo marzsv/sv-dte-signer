@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer update:*)",
+      "Bash(composer test)",
+      "Bash(phpunit:*)",
+      "Bash(vendor/bin/phpunit:*)",
+      "Bash(composer analyse:*)",
+      "Bash(php:*)"
+    ],
+    "deny": []
+  }
+}
