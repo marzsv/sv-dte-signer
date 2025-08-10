@@ -96,6 +96,11 @@ config/secrets.php
 docker-compose.override.yml
 .docker/
 
+# Development/AI specific files
+CLAUDE.md
+PRD.md
+.claude/
+
 # Backup files
 *.bak
 *.backup
