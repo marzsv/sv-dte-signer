@@ -89,4 +89,19 @@ class ResponseBuilderTest extends TestCase
         $this->assertEquals('COD_500', $response['errorCode']);
         $this->assertEquals([], $response['errors']);
     }
+
+    public function testVerificationSuccessResponse(): void
+    {
+        // Arrange
+        $payload = ['dte' => 'test', 'amount' => 113.0];
+        $message = 'DTE signature verified successfully';
+
+        // Act
+        $response = ResponseBuilder::verificationSuccess($payload, $message);
+
+        // Assert
+        $this->assertTrue($response['success']);
+        $this->assertEquals($message, $response['message']);
+        $this->assertEquals($payload, $response['data']);
+    }
 }

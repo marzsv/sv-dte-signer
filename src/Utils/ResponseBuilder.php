@@ -28,6 +28,21 @@ class ResponseBuilder
     }
 
     /**
+     * Build a success response for verification operations
+     * 
+     * @param array<string, mixed> $payload The verified or extracted payload
+     * @return array<string, mixed>
+     */
+    public static function verificationSuccess(array $payload, string $message): array
+    {
+        return [
+            'success' => true,
+            'message' => $message,
+            'data' => $payload
+        ];
+    }
+
+    /**
      * Build an error response from an exception
      * 
      * @return array<string, mixed>

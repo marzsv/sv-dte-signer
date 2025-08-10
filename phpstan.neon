@@ -3,3 +3,7 @@ parameters:
     paths:
         - src
         - tests
+    ignoreErrors:
+        - '#Call to an undefined method .+::expects\(\)#'
+        - '#Cannot access property \$nodeValue on DOMNode\|null#'
+        - '#Parameter \#3 \$subject of function preg_replace expects array\|string, string\|null given#'

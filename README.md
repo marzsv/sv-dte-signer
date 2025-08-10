@@ -1,10 +1,10 @@
 # DTE Signer PHP SDK
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net/)
-[![Tests](https://img.shields.io/badge/Tests-11%20passed-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-37%20passed-brightgreen.svg)](#testing)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A PHP SDK for signing Documentos Tributarios Electrónicos (DTE) for El Salvador using JWS RS512 digital signatures.
+A PHP SDK for signing and verifying Documentos Tributarios Electrónicos (DTE) for El Salvador using JWS RS512 digital signatures.
 
 ## Project Status
 
@@ -12,12 +12,13 @@ A PHP SDK for signing Documentos Tributarios Electrónicos (DTE) for El Salvador
 ✅ **MH Certificate Support** - Full support for Ministerio de Hacienda certificate format
 ✅ **Standards Compliant** - Follows El Salvador DTE specifications
 ✅ **Working Examples** - Ready-to-run examples with test certificates
-✅ **Test Coverage** - 11 tests, 23 assertions, 100% pass rate
+✅ **Test Coverage** - 37 tests, 90+ assertions, 100% pass rate
 🔒 **Security** - Secure memory handling and input validation
 
 ## Features
 
 - ✅ **Local signing**: No external servers or JVM required
+- ✅ **Signature verification**: Verify and extract content from signed DTEs
 - ✅ **JWS RS512**: Compliant with El Salvador DTE specifications
 - ✅ **MH Certificate Support**: Full support for Ministerio de Hacienda XML format
 - ✅ **Standards Compliant**: Follows El Salvador DTE specifications
@@ -45,9 +46,14 @@ A PHP SDK for signing Documentos Tributarios Electrónicos (DTE) for El Salvador
    php examples/mock_certificate_generator.php
    ```
 
-3. **Run a quick test:**
+3. **Run signing example:**
    ```bash
    php examples/basic_usage.php
+   ```
+
+4. **Run verification example:**
+   ```bash
+   php examples/verification_usage.php
    ```
 
 4. **Run all tests:**
@@ -152,6 +158,62 @@ $signer = new DteSigner('/path/to/certificates');
 $response = $signer->sign($request);
 ```
 
+## DTE Verification
+
+The SDK also provides functionality to verify signed DTEs and extract their original content.
+
+### Basic Verification
+
+```php
+<?php
+
+use Marzsv\DteSigner\DteVerifier;
+
+// Initialize the verifier
+$verifier = new DteVerifier();
+
+// Verify signature and extract original DTE content
+$response = $verifier->verify($jwsToken, '12345678901234');
+
+if ($response['success']) {
+    echo "DTE signature verified successfully!\n";
+    echo "Original DTE data:\n";
+    print_r($response['data']);
+} else {
+    echo "Verification failed: " . $response['message'] . "\n";
+}
+```
+
+### Extract Payload Without Verification
+
+```php
+<?php
+
+use Marzsv\DteSigner\DteVerifier;
+
+$verifier = new DteVerifier();
+
+// Extract payload without signature verification (NOT RECOMMENDED for production)
+$response = $verifier->extractPayload($jwsToken);
+
+if ($response['success']) {
+    echo "Payload extracted (signature not verified):\n";
+    print_r($response['data']);
+}
+```
+
+### Custom Certificate Directory for Verification
+
+```php
+<?php
+
+use Marzsv\DteSigner\DteVerifier;
+
+// Use custom certificate directory for verification
+$verifier = new DteVerifier('/path/to/certificates');
+$response = $verifier->verify($jwsToken, $nit);
+```
+
 ## Certificate Setup
 
 1. **Certificate Format**: Certificates must be XML files with the following structure:
@@ -196,6 +258,46 @@ public function sign(array|string $input): array
 - Success response: `{'success': true, 'message': '...', 'data': 'signed_jws'}`
 - Error response: `{'success': false, 'message': '...', 'errorCode': 'COD_XXX', 'errors': [...]}`
 
+### DteVerifier Class
+
+#### Constructor
+
+```php
+public function __construct(string $certificateDirectory = 'certificates')
+```
+
+**Parameters:**
+- `$certificateDirectory`: Path to the directory containing certificate files
+
+#### verify()
+
+```php
+public function verify(string $jwsToken, string $nit): array
+```
+
+**Parameters:**
+- `$jwsToken`: The JWS token to verify
+- `$nit`: The 14-digit NIT of the certificate used for signing
+
+**Returns:**
+- Success response: `{'success': true, 'message': '...', 'data': array}`
+- Error response: `{'success': false, 'message': '...', 'errorCode': 'COD_XXX', 'errors': [...]}`
+
+#### extractPayload()
+
+```php
+public function extractPayload(string $jwsToken): array
+```
+
+**Parameters:**
+- `$jwsToken`: The JWS token to extract payload from
+
+**Returns:**
+- Success response: `{'success': true, 'message': '...', 'data': array}`
+- Error response: `{'success': false, 'message': '...', 'errorCode': 'COD_XXX', 'errors': [...]}`
+
+**⚠️ Warning:** This method does not verify the signature. Use only when signature verification is not required.
+
 ### Request Format
 
 ```php
@@ -218,6 +320,7 @@ public function sign(array|string $input): array
 | COD_814 | Password mismatch |
 | COD_815 | Signing error |
 | COD_816 | JSON encoding error |
+| COD_820 | Verification error |
 | COD_500 | Unexpected error |
 
 ## Example Response
@@ -254,12 +357,57 @@ The signed JWS token follows the standard format: `header.payload.signature`
 }
 ```
 
+### Successful Verification Response
+
+```json
+{
+    "success": true,
+    "message": "DTE signature verified successfully",
+    "data": {
+        "identificacion": {
+            "version": 1,
+            "ambiente": "00",
+            "tipoDte": "01",
+            "numeroControl": "DTE-01-00000001-000000000000001",
+            "codigoGeneracion": "A1B2C3D4-E5F6-7890-1234-567890ABCDEF",
+            "fecEmi": "2025-07-20",
+            "horEmi": "10:30:00"
+        },
+        "emisor": {
+            "nit": "12345678901234",
+            "nombre": "EMPRESA DE EJEMPLO S.A. DE C.V."
+        },
+        "receptor": {
+            "nit": "98765432109876",
+            "nombre": "CLIENTE EJEMPLO S.A. DE C.V."
+        },
+        "resumen": {
+            "totalPagar": 113.00
+        }
+    }
+}
+```
+
+### Verification Error Response
+
+```json
+{
+    "success": false,
+    "message": "Invalid JWS signature",
+    "errorCode": "COD_820",
+    "errors": [
+        "Signature verification failed"
+    ]
+}
+```
+
 ## Examples
 
 See the `examples/` directory for working examples:
 
 - **Basic Usage**: `examples/basic_usage.php`
 - **File Usage**: `examples/file_usage.php`
+- **Verification Usage**: `examples/verification_usage.php`
 - **Error Handling**: `examples/error_handling.php`
 
 ### Running Examples
@@ -277,16 +425,19 @@ php examples/basic_usage.php
 # Sign from JSON file
 php examples/file_usage.php
 
+# Verify DTE signatures and extract content
+php examples/verification_usage.php
+
 # Error handling demonstration
 php examples/error_handling.php
 ```
 
-**Expected output:** Each example will show the signing process and display the resulting JWS token.
+**Expected output:** Examples will demonstrate signing, verification, and error handling with detailed output showing the complete process.
 
 ## Testing
 
 ### Test Results
-✅ **11 tests** | ✅ **23 assertions** | ✅ **100% pass rate** | ⚡ **<100ms execution time**
+✅ **37 tests** | ✅ **90+ assertions** | ✅ **100% pass rate** | ⚡ **<100ms execution time**
 
 Run the test suite:
 
@@ -313,8 +464,9 @@ composer check
 ```
 
 ### Test Coverage
-- Unit tests for all core components
+- Unit tests for all core components (signing and verification)
 - Integration tests with mock certificates
+- Signature verification and payload extraction tests
 - Error handling validation
 - Request/response format verification
 
@@ -330,11 +482,11 @@ composer check
 
 ### ✅ Ready for Production
 - [x] El Salvador DTE specification compliance
-- [x] JWS RS512 signing implementation
+- [x] JWS RS512 signing and verification implementation
 - [x] Input validation and error handling
 - [x] Security best practices implemented
 - [x] Performance requirements met (<500ms)
-- [x] Unit and integration tests
+- [x] Comprehensive unit and integration tests
 - [x] PSR-12 code standards
 
 ### 🔧 Production Setup Checklist
@@ -358,9 +510,10 @@ composer check
 
 ```
 src/
-├── DteSigner.php              # Main SDK class
+├── DteSigner.php              # Main signing class
+├── DteVerifier.php            # Main verification class
 ├── Certificate/               # Certificate handling
-├── Signing/                   # JWS signing engine
+├── Signing/                   # JWS signing and verification engine
 ├── Validators/                # Input validation
 ├── Exceptions/                # Custom exceptions
 └── Utils/                     # Utility classes
