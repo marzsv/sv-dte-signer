@@ -8,7 +8,7 @@ Este documento lista las áreas de mejora identificadas en la librería, organiz
 
 | # | Mejora | Prioridad | Estado |
 |---|--------|-----------|--------|
-| 1 | [Cobertura de tests incompleta](#1-cobertura-de-tests-incompleta) | 🔴 Alta | ⬜ Pendiente |
+| 1 | [Cobertura de tests incompleta](#1-cobertura-de-tests-incompleta) | 🔴 Alta | ✅ Completado |
 | 2 | [Limpieza de memoria inefectiva](#2-limpieza-de-memoria-inefectiva) | 🔴 Alta | ✅ Completado |
 | 3 | [Renombrar passwordPri a nombre descriptivo](#3-renombrar-passwordpri-a-nombre-descriptivo) | 🔴 Alta | ✅ Completado |
 | 4 | [Código duplicado en processPrivateKey](#4-código-duplicado-en-processprivatekey) | 🟠 Media | ⬜ Pendiente |
@@ -30,27 +30,26 @@ Este documento lista las áreas de mejora identificadas en la librería, organiz
 ### 1. Cobertura de Tests Incompleta
 
 **Prioridad:** 🔴 Alta
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Completado
 
 **Descripción:**
-Solo hay 4 archivos de test pero 13 clases en `src/`. Varias clases críticas no tienen tests unitarios.
+Solo había 4 archivos de test pero 13 clases en `src/`. Varias clases críticas no tenían tests unitarios.
 
-**Clases sin tests:**
+**Solución implementada:**
+Se crearon tests unitarios para todas las clases críticas:
 
-| Clase | Archivo | Criticidad |
-|-------|---------|------------|
-| `DteSigner` | `src/DteSigner.php` | **Alta** - Clase principal de firma |
-| `CertificateLoader` | `src/Certificate/CertificateLoader.php` | **Alta** - Carga y valida certificados |
-| `CertificateParser` | `src/Certificate/CertificateParser.php` | **Alta** - Parsea XML de MH |
-| `JwsSigner` | `src/Signing/JwsSigner.php` | **Alta** - Crea firmas JWS |
-| `CertificateValidator` | `src/Validators/CertificateValidator.php` | Media |
-| `DteSignerException` | `src/Exceptions/DteSignerException.php` | Baja |
-| `ValidationException` | `src/Exceptions/ValidationException.php` | Baja |
-| `CertificateException` | `src/Exceptions/CertificateException.php` | Baja |
-| `VerificationException` | `src/Exceptions/VerificationException.php` | Baja |
+| Clase | Test | Tests agregados |
+|-------|------|-----------------|
+| `DteSigner` | `DteSignerTest.php` | 10 tests |
+| `JwsSigner` | `JwsSignerTest.php` | 10 tests |
+| `CertificateLoader` | `CertificateLoaderTest.php` | 8 tests |
+| `CertificateParser` | `CertificateParserTest.php` | 12 tests |
+| `CertificateValidator` | `CertificateValidatorTest.php` | 10 tests |
 
-**Solución:**
-Crear tests unitarios para cada clase faltante, priorizando las de alta criticidad.
+**Resultado:**
+- Tests anteriores: 37 tests, 89 assertions
+- Tests nuevos: **87 tests, 196 assertions**
+- Incremento: +50 tests (+135%), +107 assertions (+120%)
 
 ---
 
@@ -411,3 +410,4 @@ Extraer fechas de validez del certificado (si están disponibles en el formato M
 | 2025-11-30 | Documento inicial creado |
 | 2025-11-30 | ✅ #3 Completado: Renombrado `passwordPri` → `privateKeyPassword` |
 | 2025-11-30 | ✅ #2 Completado: Arreglada limpieza de memoria con referencia y sobrescritura |
+| 2025-11-30 | ✅ #1 Completado: Tests para clases críticas (87 tests, 196 assertions) |

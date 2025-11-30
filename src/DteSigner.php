@@ -47,6 +47,7 @@ class DteSigner
      */
     public function sign(array|string $input): array
     {
+        $requestData = [];
         try {
             $requestData = $this->parseInput($input);
             $this->requestValidator->validate($requestData);
@@ -75,7 +76,7 @@ class DteSigner
                 'COD_500'
             );
         } finally {
-            $this->clearSensitiveData($requestData ?? []);
+            $this->clearSensitiveData($requestData);
         }
     }
 
