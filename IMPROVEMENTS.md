@@ -9,8 +9,8 @@ Este documento lista las áreas de mejora identificadas en la librería, organiz
 | # | Mejora | Prioridad | Estado |
 |---|--------|-----------|--------|
 | 1 | [Cobertura de tests incompleta](#1-cobertura-de-tests-incompleta) | 🔴 Alta | ⬜ Pendiente |
-| 2 | [Limpieza de memoria inefectiva](#2-limpieza-de-memoria-inefectiva) | 🔴 Alta | ⬜ Pendiente |
-| 3 | [Renombrar passwordPri a nombre descriptivo](#3-renombrar-passwordpri-a-nombre-descriptivo) | 🔴 Alta | ⬜ Pendiente |
+| 2 | [Limpieza de memoria inefectiva](#2-limpieza-de-memoria-inefectiva) | 🔴 Alta | ✅ Completado |
+| 3 | [Renombrar passwordPri a nombre descriptivo](#3-renombrar-passwordpri-a-nombre-descriptivo) | 🔴 Alta | ✅ Completado |
 | 4 | [Código duplicado en processPrivateKey](#4-código-duplicado-en-processprivatekey) | 🟠 Media | ⬜ Pendiente |
 | 5 | [Validación de NIT inconsistente](#5-validación-de-nit-inconsistente) | 🟠 Media | ⬜ Pendiente |
 | 6 | [Validación de password vacía](#6-validación-de-password-vacía) | 🟠 Media | ⬜ Pendiente |
@@ -57,57 +57,58 @@ Crear tests unitarios para cada clase faltante, priorizando las de alta criticid
 ### 2. Limpieza de Memoria Inefectiva
 
 **Prioridad:** 🔴 Alta (Seguridad)
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Completado
 
 **Descripción:**
-En `src/DteSigner.php:136-145`, el método `clearSensitiveData()` recibe el array por valor (copia), no por referencia, por lo que el `unset()` no afecta la variable original.
+En `src/DteSigner.php:136-145`, el método `clearSensitiveData()` recibía el array por valor (copia), no por referencia, por lo que el `unset()` no afectaba la variable original.
 
-**Código actual:**
+**Solución implementada:**
+- Cambió el parámetro a referencia `array &$data`
+- Se sobrescriben los valores con null bytes antes de hacer unset para minimizar el tiempo que las contraseñas permanecen en memoria
+
 ```php
-private function clearSensitiveData(array $data): void  // ← Recibe copia
+private function clearSensitiveData(array &$data): void
 {
-    if (isset($data['passwordPri'])) {
-        unset($data['passwordPri']);  // ← Solo limpia la copia local
-    }
+    $sensitiveFields = ['certificatePassword', 'publicKeyPassword'];
 
-    if (isset($data['passwordPub'])) {
-        unset($data['passwordPub']);
+    foreach ($sensitiveFields as $field) {
+        if (isset($data[$field])) {
+            $data[$field] = str_repeat("\0", strlen((string) $data[$field]));
+            unset($data[$field]);
+        }
     }
 }
 ```
-
-**Problema:**
-La contraseña permanece en memoria en la variable `$requestData` original después de llamar a este método.
-
-**Solución:**
-Cambiar el parámetro a referencia `array &$data` o implementar una estrategia de limpieza más robusta.
 
 ---
 
 ### 3. Renombrar passwordPri a Nombre Descriptivo
 
 **Prioridad:** 🔴 Alta
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Completado
 
 **Descripción:**
-El nombre `passwordPri` no es descriptivo ni sigue convenciones de nomenclatura claras. Es una abreviación confusa que no indica claramente su propósito.
+El nombre `passwordPri` no era descriptivo ni seguía convenciones de nomenclatura claras.
 
-**Ubicaciones afectadas:**
-- `src/DteSigner.php:56, 62, 138`
-- `src/Validators/RequestValidator.php:26, 39`
+**Solución implementada:**
+Se renombraron las keys en todo el código, tests, ejemplos y documentación:
+
+| Anterior | Nuevo |
+|----------|-------|
+| `passwordPri` | `certificatePassword` |
+| `passwordPub` | `publicKeyPassword` |
+
+**Archivos modificados:**
+- `src/DteSigner.php`
+- `src/Validators/RequestValidator.php`
+- `tests/Unit/RequestValidatorTest.php`
 - `examples/basic_usage.php`
+- `examples/verification_usage.php`
+- `examples/error_handling.php`
 - `examples/sample_dte_request.json`
-- `README.md` (documentación)
+- `README.md`
 
-**Nombres actuales vs propuestos:**
-
-| Actual | Propuesto | Razón |
-|--------|-----------|-------|
-| `passwordPri` | `certificatePassword` | Describe claramente que es la contraseña del certificado |
-| `passwordPub` | `publicKeyPassword` | (si se usa) Contraseña de la clave pública |
-
-**Solución:**
-Renombrar `passwordPri` a `certificatePassword` en todo el código, ejemplos y documentación.
+**Nota:** Este es un breaking change para usuarios existentes.
 
 ---
 
@@ -409,3 +410,5 @@ Extraer fechas de validez del certificado (si están disponibles en el formato M
 | Fecha | Cambio |
 |-------|--------|
 | 2025-11-30 | Documento inicial creado |
+| 2025-11-30 | ✅ #3 Completado: Renombrado `passwordPri` → `certificatePassword` |
+| 2025-11-30 | ✅ #2 Completado: Arreglada limpieza de memoria con referencia y sobrescritura |

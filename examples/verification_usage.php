@@ -22,7 +22,7 @@ echo "Step 1: Signing a DTE to get a JWS token...\n";
 $signer = new DteSigner();
 $signingRequest = [
     'nit' => '12345678901234',
-    'passwordPri' => 'testpassword',
+    'certificatePassword' => 'testpassword',
     'dteJson' => [
         'identificacion' => [
             'version' => 1,

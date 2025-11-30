@@ -53,13 +53,13 @@ class DteSigner
 
             $certificateData = $this->certificateLoader->loadCertificate(
                 $requestData['nit'],
-                $requestData['passwordPri']
+                $requestData['certificatePassword']
             );
 
             $signedJws = $this->jwsSigner->sign(
                 $requestData['dteJson'],
                 $certificateData['privateKey'],
-                $requestData['passwordPri'] // Pass password for MH certificates
+                $requestData['certificatePassword']
             );
 
             return ResponseBuilder::success($signedJws, 'DTE signed successfully', [
@@ -133,17 +133,21 @@ class DteSigner
 
     /**
      * Clear sensitive data from memory for security
-     * 
-     * @param array<string, mixed> $data
+     *
+     * Overwrites sensitive values before unsetting to minimize the time
+     * passwords remain in memory.
+     *
+     * @param array<string, mixed> $data Reference to the data array
      */
-    private function clearSensitiveData(array $data): void
+    private function clearSensitiveData(array &$data): void
     {
-        if (isset($data['passwordPri'])) {
-            unset($data['passwordPri']);
-        }
-        
-        if (isset($data['passwordPub'])) {
-            unset($data['passwordPub']);
+        $sensitiveFields = ['certificatePassword', 'publicKeyPassword'];
+
+        foreach ($sensitiveFields as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = str_repeat("\0", strlen((string) $data[$field]));
+                unset($data[$field]);
+            }
         }
     }
 }

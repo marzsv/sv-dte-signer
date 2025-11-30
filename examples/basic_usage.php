@@ -20,7 +20,7 @@ $signer = new DteSigner();
 // Example DTE signing request
 $signingRequest = [
     'nit' => '12345678901234',
-    'passwordPri' => 'testpassword',
+    'certificatePassword' => 'testpassword',
     'dteJson' => [
         'identificacion' => [
             'version' => 1,

@@ -17,7 +17,7 @@ class RequestValidator
     private const NIT_PATTERN = '/^\d{14}$/';
 
     /** @var array<string> */
-    private array $requiredFields = ['nit', 'passwordPri', 'dteJson'];
+    private array $requiredFields = ['nit', 'certificatePassword', 'dteJson'];
 
     /**
      * Validate a signing request
@@ -31,7 +31,7 @@ class RequestValidator
 
         $errors = array_merge($errors, $this->validateRequiredFields($request));
         $errors = array_merge($errors, $this->validateNit($request['nit'] ?? ''));
-        $errors = array_merge($errors, $this->validatePassword($request['passwordPri'] ?? ''));
+        $errors = array_merge($errors, $this->validatePassword($request['certificatePassword'] ?? ''));
         $errors = array_merge($errors, $this->validateDteJson($request['dteJson'] ?? null));
 
         if (!empty($errors)) {
