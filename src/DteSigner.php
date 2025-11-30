@@ -53,13 +53,13 @@ class DteSigner
 
             $certificateData = $this->certificateLoader->loadCertificate(
                 $requestData['nit'],
-                $requestData['certificatePassword']
+                $requestData['privateKeyPassword']
             );
 
             $signedJws = $this->jwsSigner->sign(
                 $requestData['dteJson'],
                 $certificateData['privateKey'],
-                $requestData['certificatePassword']
+                $requestData['privateKeyPassword']
             );
 
             return ResponseBuilder::success($signedJws, 'DTE signed successfully', [
@@ -141,7 +141,7 @@ class DteSigner
      */
     private function clearSensitiveData(array &$data): void
     {
-        $sensitiveFields = ['certificatePassword', 'publicKeyPassword'];
+        $sensitiveFields = ['privateKeyPassword'];
 
         foreach ($sensitiveFields as $field) {
             if (isset($data[$field])) {

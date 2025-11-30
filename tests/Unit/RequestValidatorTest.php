@@ -22,7 +22,7 @@ class RequestValidatorTest extends TestCase
         // Arrange
         $validRequest = [
             'nit' => '12345678901234',
-            'certificatePassword' => 'validpassword',
+            'privateKeyPassword' => 'validpassword',
             'dteJson' => ['test' => 'data']
         ];
 
@@ -36,7 +36,7 @@ class RequestValidatorTest extends TestCase
         // Arrange
         $invalidRequest = [
             'nit' => '123456789', // Too short
-            'certificatePassword' => 'validpassword',
+            'privateKeyPassword' => 'validpassword',
             'dteJson' => ['test' => 'data']
         ];
 
@@ -50,7 +50,7 @@ class RequestValidatorTest extends TestCase
         // Arrange
         $invalidRequest = [
             'nit' => '1234567890123a', // Contains letter
-            'certificatePassword' => 'validpassword',
+            'privateKeyPassword' => 'validpassword',
             'dteJson' => ['test' => 'data']
         ];
 
@@ -64,7 +64,7 @@ class RequestValidatorTest extends TestCase
         // Arrange
         $invalidRequest = [
             'nit' => '12345678901234',
-            'certificatePassword' => 'short', // Too short
+            'privateKeyPassword' => 'short', // Too short
             'dteJson' => ['test' => 'data']
         ];
 
@@ -92,7 +92,7 @@ class RequestValidatorTest extends TestCase
         // Arrange
         $invalidRequest = [
             'nit' => '12345678901234',
-            'certificatePassword' => 'validpassword',
+            'privateKeyPassword' => 'validpassword',
             'dteJson' => null
         ];
 

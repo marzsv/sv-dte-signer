@@ -69,7 +69,7 @@ En `src/DteSigner.php:136-145`, el método `clearSensitiveData()` recibía el ar
 ```php
 private function clearSensitiveData(array &$data): void
 {
-    $sensitiveFields = ['certificatePassword', 'publicKeyPassword'];
+    $sensitiveFields = ['privateKeyPassword'];
 
     foreach ($sensitiveFields as $field) {
         if (isset($data[$field])) {
@@ -91,12 +91,11 @@ private function clearSensitiveData(array &$data): void
 El nombre `passwordPri` no era descriptivo ni seguía convenciones de nomenclatura claras.
 
 **Solución implementada:**
-Se renombraron las keys en todo el código, tests, ejemplos y documentación:
+Se renombró la key a un nombre técnicamente preciso:
 
-| Anterior | Nuevo |
-|----------|-------|
-| `passwordPri` | `certificatePassword` |
-| `passwordPub` | `publicKeyPassword` |
+| Anterior | Nuevo | Razón |
+|----------|-------|-------|
+| `passwordPri` | `privateKeyPassword` | Describe precisamente que es la contraseña para desencriptar la clave privada |
 
 **Archivos modificados:**
 - `src/DteSigner.php`
@@ -108,7 +107,7 @@ Se renombraron las keys en todo el código, tests, ejemplos y documentación:
 - `examples/sample_dte_request.json`
 - `README.md`
 
-**Nota:** Este es un breaking change para usuarios existentes.
+**Nota:** Este es un breaking change para usuarios existentes. También se eliminó `publicKeyPassword` ya que no se usaba.
 
 ---
 
@@ -410,5 +409,5 @@ Extraer fechas de validez del certificado (si están disponibles en el formato M
 | Fecha | Cambio |
 |-------|--------|
 | 2025-11-30 | Documento inicial creado |
-| 2025-11-30 | ✅ #3 Completado: Renombrado `passwordPri` → `certificatePassword` |
+| 2025-11-30 | ✅ #3 Completado: Renombrado `passwordPri` → `privateKeyPassword` |
 | 2025-11-30 | ✅ #2 Completado: Arreglada limpieza de memoria con referencia y sobrescritura |
