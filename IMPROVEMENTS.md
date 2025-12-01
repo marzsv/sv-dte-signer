@@ -11,11 +11,11 @@ Este documento lista las áreas de mejora identificadas en la librería, organiz
 | 1 | [Cobertura de tests incompleta](#1-cobertura-de-tests-incompleta) | 🔴 Alta | ✅ Completado |
 | 2 | [Limpieza de memoria inefectiva](#2-limpieza-de-memoria-inefectiva) | 🔴 Alta | ✅ Completado |
 | 3 | [Renombrar passwordPri a nombre descriptivo](#3-renombrar-passwordpri-a-nombre-descriptivo) | 🔴 Alta | ✅ Completado |
-| 4 | [Código duplicado en processPrivateKey](#4-código-duplicado-en-processprivatekey) | 🟠 Media | ⬜ Pendiente |
-| 5 | [Validación de NIT inconsistente](#5-validación-de-nit-inconsistente) | 🟠 Media | ⬜ Pendiente |
+| 4 | [Código duplicado en processPrivateKey](#4-código-duplicado-en-processprivatekey) | 🟠 Media | ✅ Completado |
+| 5 | [Validación de NIT inconsistente](#5-validación-de-nit-inconsistente) | 🟠 Media | ✅ Completado |
 | 6 | [Validación de password vacía](#6-validación-de-password-vacía) | 🟠 Media | ⬜ Pendiente |
 | 7 | [Ausencia de interfaces](#7-ausencia-de-interfaces) | 🟠 Media | ⬜ Pendiente |
-| 8 | [Re-envolvimiento de excepciones](#8-re-envolvimiento-de-excepciones) | 🟡 Baja | ⬜ Pendiente |
+| 8 | [Re-envolvimiento de excepciones](#8-re-envolvimiento-de-excepciones) | 🟡 Baja | ✅ Completado |
 | 9 | [Supresión de warnings XML ausente](#9-supresión-de-warnings-xml-ausente) | 🟡 Baja | ⬜ Pendiente |
 | 10 | [OpenSSL error string sin verificar](#10-openssl-error-string-sin-verificar) | 🟡 Baja | ⬜ Pendiente |
 | 11 | [Constantes duplicadas](#11-constantes-duplicadas) | 🟡 Baja | ⬜ Pendiente |
@@ -113,46 +113,68 @@ Se renombró la key a un nombre técnicamente preciso:
 ### 4. Código Duplicado en processPrivateKey
 
 **Prioridad:** 🟠 Media
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Completado
 
 **Descripción:**
-La función `processPrivateKey()` está implementada de forma casi idéntica en dos lugares:
+La función `processPrivateKey()` estaba implementada de forma casi idéntica en dos lugares:
 
 1. `src/Signing/JwsSigner.php:58-98`
 2. `src/Certificate/CertificateLoader.php:138-156`
 
-Ambas realizan la misma conversión de formato base64/DER a PEM.
+Ambas realizaban la misma conversión de formato base64/DER a PEM.
 
-**Solución:**
-Extraer la lógica común a una clase utilitaria `KeyFormatter` o similar en `src/Utils/`.
+**Solución implementada:**
+Se creó una clase utilitaria `KeyFormatter` en `src/Utils/KeyFormatter.php` con métodos estáticos:
+
+```php
+class KeyFormatter
+{
+    public static function toPem(string $privateKey): string
+    public static function toPemDecrypted(string $privateKey, ?string $password = null): string
+    public static function isPemFormat(string $key): bool
+}
+```
+
+**Archivos modificados:**
+- `src/Utils/KeyFormatter.php` (nuevo)
+- `src/Signing/JwsSigner.php` (usa `KeyFormatter::toPemDecrypted()`)
+- `src/Certificate/CertificateLoader.php` (usa `KeyFormatter::toPem()`)
+- `tests/Unit/KeyFormatterTest.php` (nuevo, 10 tests)
 
 ---
 
 ### 5. Validación de NIT Inconsistente
 
 **Prioridad:** 🟠 Media
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Completado
 
 **Descripción:**
-La validación del NIT se realiza de forma diferente en distintas partes del código:
+La validación del NIT se realizaba de forma diferente en distintas partes del código:
 
 | Ubicación | Validación | Acepta "ABCDEFGHIJKLMN"? |
 |-----------|------------|--------------------------|
 | `RequestValidator.php:14` | `^\d{14}$` (regex numérico) | ❌ No |
 | `DteVerifier.php:55-60` | Solo `strlen($nit) !== 14` | ✅ Sí (bug) |
 
-**Código en DteVerifier.php:**
+**Solución implementada:**
+Se creó una clase centralizada `NitValidator` en `src/Validators/NitValidator.php`:
+
 ```php
-if (empty($nit) || strlen($nit) !== 14) {
-    throw new VerificationException(
-        'Invalid NIT format',
-        ['NIT must be exactly 14 characters long']
-    );
+class NitValidator
+{
+    public static function isValid(string $nit): bool
+    public static function validate(string $nit): array
+    public static function getExpectedLength(): int
 }
 ```
 
-**Solución:**
-Usar el mismo patrón de validación `^\d{14}$` en ambos lugares, idealmente centralizando la validación en `RequestValidator` o creando un `NitValidator`.
+Ahora tanto `RequestValidator` como `DteVerifier` usan `NitValidator::validate()` para validación consistente.
+
+**Archivos modificados:**
+- `src/Validators/NitValidator.php` (nuevo)
+- `src/Validators/RequestValidator.php` (usa `NitValidator::validate()`)
+- `src/DteVerifier.php` (usa `NitValidator::validate()`)
+- `tests/Unit/NitValidatorTest.php` (nuevo, 14 tests)
 
 ---
 
@@ -216,18 +238,13 @@ Crear interfaces para las dependencias principales y actualizar las clases para 
 ### 8. Re-envolvimiento de Excepciones
 
 **Prioridad:** 🟡 Baja
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Completado
 
 **Descripción:**
-En `src/Signing/JwsSigner.php:47-52`, el catch genérico re-envuelve excepciones que ya son `DteSignerException`, perdiendo el código de error original.
+En `src/Signing/JwsSigner.php:47-52`, el catch genérico re-envolvía excepciones que ya eran `DteSignerException`, perdiendo el código de error original.
 
-**Código actual:**
+**Código anterior:**
 ```php
-try {
-    if (empty($privateKey)) {
-        throw new DteSignerException('Private key cannot be empty', 'COD_815');
-    }
-    // ...
 } catch (\Exception $e) {
     throw new DteSignerException(
         'Failed to sign DTE: ' . $e->getMessage(),
@@ -236,8 +253,9 @@ try {
 }
 ```
 
-**Solución:**
-Verificar si la excepción ya es `DteSignerException` antes de re-envolverla:
+**Solución implementada:**
+Se agregó un catch específico para `DteSignerException` antes del catch genérico:
+
 ```php
 } catch (DteSignerException $e) {
     throw $e;
@@ -245,6 +263,10 @@ Verificar si la excepción ya es `DteSignerException` antes de re-envolverla:
     throw new DteSignerException('Failed to sign DTE: ' . $e->getMessage(), 'COD_815');
 }
 ```
+
+**Archivos modificados:**
+- `src/Signing/JwsSigner.php`
+- `src/Certificate/CertificateLoader.php` (mismo patrón aplicado)
 
 ---
 
@@ -411,3 +433,7 @@ Extraer fechas de validez del certificado (si están disponibles en el formato M
 | 2025-11-30 | ✅ #3 Completado: Renombrado `passwordPri` → `privateKeyPassword` |
 | 2025-11-30 | ✅ #2 Completado: Arreglada limpieza de memoria con referencia y sobrescritura |
 | 2025-11-30 | ✅ #1 Completado: Tests para clases críticas (87 tests, 196 assertions) |
+| 2025-12-01 | ✅ #4 Completado: Extraída lógica duplicada a `KeyFormatter` |
+| 2025-12-01 | ✅ #5 Completado: Centralizada validación NIT en `NitValidator` |
+| 2025-12-01 | ✅ #8 Completado: Corregido re-envolvimiento de excepciones |
+| 2025-12-01 | Tests actualizados: 108 tests, 222 assertions |
