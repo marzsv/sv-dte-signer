@@ -15,24 +15,41 @@ class CertificateParser
 {
     /**
      * Parse MH certificate XML content and extract required data
-     * 
+     *
      * @return array<string, mixed>
      * @throws CertificateException
      */
     public function parse(string $xmlContent): array
     {
         $document = new DOMDocument();
-        
-        if (!$document->loadXML($xmlContent)) {
-            throw CertificateException::invalidCertificate('Invalid XML format');
-        }
 
-        // Verify it's an MH certificate
-        if ($document->getElementsByTagName('CertificadoMH')->length === 0) {
-            throw CertificateException::invalidCertificate('Certificate must be in MH (Ministerio de Hacienda) format');
-        }
+        // Suppress PHP warnings and capture errors internally
+        $previousErrorState = libxml_use_internal_errors(true);
 
-        return $this->parseMhCertificate($document);
+        try {
+            if (!$document->loadXML($xmlContent)) {
+                $errors = libxml_get_errors();
+                libxml_clear_errors();
+                $errorMessage = 'Invalid XML format';
+                if (!empty($errors)) {
+                    $errorMessage .= ': ' . $errors[0]->message;
+                }
+                throw CertificateException::invalidCertificate(trim($errorMessage));
+            }
+
+            // Clear any warnings that didn't cause failure
+            libxml_clear_errors();
+
+            // Verify it's an MH certificate
+            if ($document->getElementsByTagName('CertificadoMH')->length === 0) {
+                throw CertificateException::invalidCertificate('Certificate must be in MH (Ministerio de Hacienda) format');
+            }
+
+            return $this->parseMhCertificate($document);
+        } finally {
+            // Restore previous error handling state
+            libxml_use_internal_errors($previousErrorState);
+        }
     }
 
     /**

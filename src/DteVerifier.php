@@ -19,8 +19,6 @@ use Marzsv\DteSigner\Validators\NitValidator;
  */
 class DteVerifier
 {
-    private const DEFAULT_CERTIFICATE_DIRECTORY = 'certificates';
-
     private CertificateLoader $certificateLoader;
     private JwsVerifier $jwsVerifier;
 
@@ -28,7 +26,7 @@ class DteVerifier
      * Initialize DTE Verifier with certificate directory
      */
     public function __construct(
-        string $certificateDirectory = self::DEFAULT_CERTIFICATE_DIRECTORY,
+        string $certificateDirectory = Config::DEFAULT_CERTIFICATE_DIRECTORY,
         ?CertificateLoader $certificateLoader = null,
         ?JwsVerifier $jwsVerifier = null
     ) {

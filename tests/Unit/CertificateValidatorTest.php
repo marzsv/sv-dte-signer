@@ -122,22 +122,20 @@ class CertificateValidatorTest extends TestCase
         $this->validator->validate($certificateData, 'password');
     }
 
-    public function testValidateMissingPasswordHashThrowsException(): void
+    public function testValidateWithoutPasswordHashSucceeds(): void
     {
-        // Arrange
+        // Arrange - passwordHash is not required because MH certificates
+        // don't store password hashes. Validation happens during signing.
         $certificateData = [
             'activo' => 'true',
             'verificado' => 'true',
             'privateKey' => 'mock-private-key',
-            // 'passwordHash' missing
+            // 'passwordHash' not needed
         ];
 
-        // Assert
-        $this->expectException(CertificateException::class);
-        $this->expectExceptionMessage('Password hash is missing');
-
-        // Act
+        // Act & Assert - should NOT throw
         $this->validator->validate($certificateData, 'password');
+        $this->assertTrue(true);
     }
 
     public function testValidateVerificadoFalseString(): void

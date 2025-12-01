@@ -13,14 +13,12 @@ use Marzsv\DteSigner\Validators\RequestValidator;
 
 /**
  * Main DTE Signer class for signing electronic documents
- * 
+ *
  * This class provides functionality to sign Documentos Tributarios Electrónicos (DTE)
  * for El Salvador using JWS RS512 digital signatures.
  */
 class DteSigner
 {
-    private const DEFAULT_CERTIFICATE_DIRECTORY = 'certificates';
-
     private RequestValidator $requestValidator;
     private CertificateLoader $certificateLoader;
     private JwsSigner $jwsSigner;
@@ -29,7 +27,7 @@ class DteSigner
      * Initialize DTE Signer with certificate directory
      */
     public function __construct(
-        string $certificateDirectory = self::DEFAULT_CERTIFICATE_DIRECTORY,
+        string $certificateDirectory = Config::DEFAULT_CERTIFICATE_DIRECTORY,
         ?RequestValidator $requestValidator = null,
         ?CertificateLoader $certificateLoader = null,
         ?JwsSigner $jwsSigner = null

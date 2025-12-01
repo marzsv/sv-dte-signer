@@ -13,12 +13,12 @@ Este documento lista las áreas de mejora identificadas en la librería, organiz
 | 3 | [Renombrar passwordPri a nombre descriptivo](#3-renombrar-passwordpri-a-nombre-descriptivo) | 🔴 Alta | ✅ Completado |
 | 4 | [Código duplicado en processPrivateKey](#4-código-duplicado-en-processprivatekey) | 🟠 Media | ✅ Completado |
 | 5 | [Validación de NIT inconsistente](#5-validación-de-nit-inconsistente) | 🟠 Media | ✅ Completado |
-| 6 | [Validación de password vacía](#6-validación-de-password-vacía) | 🟠 Media | ⬜ Pendiente |
+| 6 | [Validación de password vacía](#6-validación-de-password-vacía) | 🟠 Media | ✅ Completado |
 | 7 | [Ausencia de interfaces](#7-ausencia-de-interfaces) | 🟠 Media | ⬜ Pendiente |
 | 8 | [Re-envolvimiento de excepciones](#8-re-envolvimiento-de-excepciones) | 🟡 Baja | ✅ Completado |
-| 9 | [Supresión de warnings XML ausente](#9-supresión-de-warnings-xml-ausente) | 🟡 Baja | ⬜ Pendiente |
-| 10 | [OpenSSL error string sin verificar](#10-openssl-error-string-sin-verificar) | 🟡 Baja | ⬜ Pendiente |
-| 11 | [Constantes duplicadas](#11-constantes-duplicadas) | 🟡 Baja | ⬜ Pendiente |
+| 9 | [Supresión de warnings XML ausente](#9-supresión-de-warnings-xml-ausente) | 🟡 Baja | ✅ Completado |
+| 10 | [OpenSSL error string sin verificar](#10-openssl-error-string-sin-verificar) | 🟡 Baja | ✅ Completado |
+| 11 | [Constantes duplicadas](#11-constantes-duplicadas) | 🟡 Baja | ✅ Completado |
 | 12 | [Falta de tests de integración](#12-falta-de-tests-de-integración) | 🟡 Baja | ⬜ Pendiente |
 | 13 | [Sin sistema de logging](#13-sin-sistema-de-logging) | 🟡 Baja | ⬜ Pendiente |
 | 14 | [Sin verificación de expiración de certificados](#14-sin-verificación-de-expiración-de-certificados) | 🟡 Baja | ⬜ Pendiente |
@@ -181,28 +181,29 @@ Ahora tanto `RequestValidator` como `DteVerifier` usan `NitValidator::validate()
 ### 6. Validación de Password Vacía
 
 **Prioridad:** 🟠 Media
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Completado
 
 **Descripción:**
-En `src/Validators/CertificateValidator.php:62-72`, el método `validatePassword()` existe pero no realiza ninguna validación real.
+En `src/Validators/CertificateValidator.php:62-72`, el método `validatePassword()` existía pero no realizaba ninguna validación real.
 
-**Código actual:**
+**Solución implementada:**
+Se eliminó el método `validatePassword()` y se documentó claramente en la clase por qué la validación de password no ocurre aquí:
+
 ```php
-private function validatePassword(array $certificateData, string $providedPassword): void
-{
-    if (!isset($certificateData['passwordHash'])) {
-        throw CertificateException::invalidCertificate('Password hash is missing');
-    }
-
-    // For MH certificates, we skip password hash validation since they don't store password hashes
-    // The actual password validation will happen during JWS signing when OpenSSL decrypts the private key
-    // This ensures that incorrect passwords will be caught during the signing process
-    return;  // ← No hace nada
-}
+/**
+ * Validates MH certificates according to DTE specifications
+ *
+ * Note: Password validation is intentionally NOT performed here.
+ * MH certificates don't store password hashes. The actual password
+ * validation happens during JWS signing when OpenSSL decrypts the
+ * private key - if the password is wrong, decryption will fail.
+ */
+class CertificateValidator
 ```
 
-**Solución:**
-Documentar claramente por qué no se valida aquí, o eliminar el método si no es necesario. Considerar si hay alguna validación que sí se pueda hacer.
+**Archivos modificados:**
+- `src/Validators/CertificateValidator.php` (documentación y limpieza)
+- `tests/Unit/CertificateValidatorTest.php` (test actualizado)
 
 ---
 
@@ -273,75 +274,92 @@ Se agregó un catch específico para `DteSignerException` antes del catch genér
 ### 9. Supresión de Warnings XML Ausente
 
 **Prioridad:** 🟡 Baja
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Completado
 
 **Descripción:**
-En `src/Certificate/CertificateParser.php:26`, `loadXML()` puede generar warnings de PHP para XML malformado antes de que se lance la excepción.
+En `src/Certificate/CertificateParser.php:26`, `loadXML()` podía generar warnings de PHP para XML malformado antes de que se lanzara la excepción.
 
-**Código actual:**
-```php
-if (!$document->loadXML($xmlContent)) {
-    throw CertificateException::invalidCertificate('Invalid XML format');
-}
-```
+**Solución implementada:**
+Se usa `libxml_use_internal_errors(true)` para capturar errores de forma limpia, incluyendo el primer mensaje de error en la excepción:
 
-**Solución:**
-Usar `libxml_use_internal_errors(true)` para capturar errores de forma limpia:
 ```php
-libxml_use_internal_errors(true);
-if (!$document->loadXML($xmlContent)) {
-    $errors = libxml_get_errors();
+$previousErrorState = libxml_use_internal_errors(true);
+try {
+    if (!$document->loadXML($xmlContent)) {
+        $errors = libxml_get_errors();
+        libxml_clear_errors();
+        $errorMessage = 'Invalid XML format';
+        if (!empty($errors)) {
+            $errorMessage .= ': ' . $errors[0]->message;
+        }
+        throw CertificateException::invalidCertificate(trim($errorMessage));
+    }
     libxml_clear_errors();
-    throw CertificateException::invalidCertificate('Invalid XML format');
+    // ...
+} finally {
+    libxml_use_internal_errors($previousErrorState);
 }
 ```
+
+**Archivos modificados:**
+- `src/Certificate/CertificateParser.php`
 
 ---
 
 ### 10. OpenSSL Error String Sin Verificar
 
 **Prioridad:** 🟡 Baja
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Completado
 
 **Descripción:**
-En varios lugares se concatena `openssl_error_string()` directamente, pero esta función devuelve `false` cuando no hay errores pendientes.
+En varios lugares se concatenaba `openssl_error_string()` directamente, pero esta función devuelve `false` cuando no hay errores pendientes.
 
-**Ubicaciones:**
-- `src/Certificate/CertificateLoader.php:101, 110`
-- `src/Signing/JwsSigner.php:84, 93`
+**Solución implementada:**
+El manejo de errores OpenSSL se centralizó en `KeyFormatter` (mejora #4), donde se verifica el retorno:
 
-**Código actual:**
-```php
-'Cannot load private key: ' . openssl_error_string()  // Puede ser false
-```
-
-**Solución:**
-Verificar el retorno antes de concatenar:
 ```php
 $error = openssl_error_string();
-$message = 'Cannot load private key' . ($error ? ': ' . $error : '');
+throw new DteSignerException(
+    'Cannot decrypt private key with provided password' . ($error ? ': ' . $error : ''),
+    'COD_814'
+);
 ```
+
+También se aplicó el mismo patrón en `CertificateLoader::extractPublicKeyFromPrivateKey()`.
+
+**Archivos modificados:**
+- `src/Utils/KeyFormatter.php` (centralizado)
+- `src/Certificate/CertificateLoader.php`
 
 ---
 
 ### 11. Constantes Duplicadas
 
 **Prioridad:** 🟡 Baja
-**Estado:** ⬜ Pendiente
+**Estado:** ✅ Completado
 
 **Descripción:**
-La constante `DEFAULT_CERTIFICATE_DIRECTORY` está definida en múltiples clases:
+La constante `DEFAULT_CERTIFICATE_DIRECTORY` estaba definida en múltiples clases.
+
+**Solución implementada:**
+Se creó una clase `Config` centralizada para constantes de configuración:
 
 ```php
-// DteSigner.php:22
-private const DEFAULT_CERTIFICATE_DIRECTORY = 'certificates';
+// src/Config.php
+final class Config
+{
+    public const DEFAULT_CERTIFICATE_DIRECTORY = 'certificates';
 
-// DteVerifier.php:22
-private const DEFAULT_CERTIFICATE_DIRECTORY = 'certificates';
+    private function __construct() {}
+}
 ```
 
-**Solución:**
-Mover a una clase de configuración centralizada o crear una constante compartida.
+Ahora ambas clases usan `Config::DEFAULT_CERTIFICATE_DIRECTORY`.
+
+**Archivos modificados:**
+- `src/Config.php` (nuevo)
+- `src/DteSigner.php`
+- `src/DteVerifier.php`
 
 ---
 
@@ -436,4 +454,8 @@ Extraer fechas de validez del certificado (si están disponibles en el formato M
 | 2025-12-01 | ✅ #4 Completado: Extraída lógica duplicada a `KeyFormatter` |
 | 2025-12-01 | ✅ #5 Completado: Centralizada validación NIT en `NitValidator` |
 | 2025-12-01 | ✅ #8 Completado: Corregido re-envolvimiento de excepciones |
-| 2025-12-01 | Tests actualizados: 108 tests, 222 assertions |
+| 2025-12-01 | ✅ #6 Completado: Limpieza de validación de password no usada |
+| 2025-12-01 | ✅ #9 Completado: Supresión de warnings XML con libxml |
+| 2025-12-01 | ✅ #10 Completado: Verificación de openssl_error_string |
+| 2025-12-01 | ✅ #11 Completado: Centralizada constante en `Config` |
+| 2025-12-01 | Tests actualizados: 108 tests, 221 assertions |
