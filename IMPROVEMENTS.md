@@ -6,6 +6,8 @@ Este documento lista las áreas de mejora identificadas en la librería, organiz
 
 ## Estado de Implementación
 
+### Mejoras Funcionales
+
 | # | Mejora | Prioridad | Estado |
 |---|--------|-----------|--------|
 | 1 | [Cobertura de tests incompleta](#1-cobertura-de-tests-incompleta) | 🔴 Alta | ✅ Completado |
@@ -22,6 +24,17 @@ Este documento lista las áreas de mejora identificadas en la librería, organiz
 | 12 | [Falta de tests de integración](#12-falta-de-tests-de-integración) | 🟡 Baja | ⬜ Pendiente |
 | 13 | [Sin sistema de logging](#13-sin-sistema-de-logging) | 🟡 Baja | ⬜ Pendiente |
 | 14 | [Sin verificación de expiración de certificados](#14-sin-verificación-de-expiración-de-certificados) | 🟡 Baja | ⬜ Pendiente |
+
+### Mejoras de Performance
+
+| # | Mejora | Impacto | Estado |
+|---|--------|---------|--------|
+| P1 | [Caché de certificados parseados](#p1-caché-de-certificados-parseados) | ⬆️ Alto | ⬜ Pendiente |
+| P2 | [Caché de claves procesadas](#p2-caché-de-claves-procesadas) | ⬆️ Medio | ⬜ Pendiente |
+| P3 | [Reutilización de DOMXPath](#p3-reutilización-de-domxpath) | ⬆️ Bajo | ⬜ Pendiente |
+| P4 | [Reducción de llamadas FS](#p4-reducción-de-llamadas-al-sistema-de-archivos) | ⬆️ Bajo | ⬜ Pendiente |
+| P5 | [JSON_THROW_ON_ERROR](#p5-uso-de-json_throw_on_error) | ⬆️ Muy bajo | ⬜ Pendiente |
+| P6 | [Eliminar hash no usado](#p6-eliminación-de-hash-placeholder-no-usado) | ⬆️ Bajo | ⬜ Pendiente |
 
 ---
 
@@ -419,6 +432,311 @@ Extraer fechas de validez del certificado (si están disponibles en el formato M
 
 ---
 
+## Mejoras de Performance
+
+Las siguientes mejoras están orientadas a optimizar el rendimiento de la librería para escenarios de alto volumen.
+
+### P1. Caché de Certificados Parseados
+
+**Prioridad:** 🔴 Alta (para alto volumen)
+**Estado:** ⬜ Pendiente
+**Impacto estimado:** ⬆️ Alto
+
+**Problema:**
+Cada llamada a `sign()` lee el archivo del certificado desde disco y lo parsea con DOMDocument. Para operaciones repetidas con el mismo NIT, esto es ineficiente.
+
+**Código actual:**
+```php
+// CertificateLoader::loadCertificate() - se ejecuta en cada firma
+$xmlContent = file_get_contents($certificateFile);  // I/O disco
+$certificateData = $this->parser->parse($xmlContent);  // Parsing XML
+```
+
+**Solución propuesta:**
+Implementar caché en memoria con TTL configurable:
+
+```php
+class CertificateLoader
+{
+    /** @var array<string, array{data: array, expires: int}> */
+    private array $cache = [];
+    private int $cacheTtl;
+
+    public function __construct(
+        string $certificateDirectory,
+        int $cacheTtlSeconds = 300,  // 5 minutos por defecto
+        // ...
+    ) {
+        $this->cacheTtl = $cacheTtlSeconds;
+    }
+
+    public function loadCertificate(string $nit, string $password): array
+    {
+        $cacheKey = $nit;
+
+        if ($this->isCacheValid($cacheKey)) {
+            return $this->cache[$cacheKey]['data'];
+        }
+
+        // ... cargar y parsear ...
+
+        $this->cache[$cacheKey] = [
+            'data' => $certificateData,
+            'expires' => time() + $this->cacheTtl
+        ];
+
+        return $certificateData;
+    }
+}
+```
+
+**Benchmark estimado:**
+- Sin caché: ~5-10ms por firma (I/O + XML parsing)
+- Con caché: ~0.1ms por firma (solo lectura de array)
+
+---
+
+### P2. Caché de Claves Procesadas
+
+**Prioridad:** 🟠 Media
+**Estado:** ⬜ Pendiente
+**Impacto estimado:** ⬆️ Medio
+
+**Problema:**
+`KeyFormatter::toPemDecrypted()` realiza operaciones OpenSSL costosas en cada llamada, incluso cuando la misma clave se usa repetidamente.
+
+**Código actual:**
+```php
+// Se ejecuta en cada firma
+$processedKey = KeyFormatter::toPemDecrypted($privateKey, $password);
+// Internamente: openssl_pkey_get_private() + openssl_pkey_export()
+```
+
+**Solución propuesta:**
+Caché estático con hash de la clave como key:
+
+```php
+class KeyFormatter
+{
+    /** @var array<string, string> */
+    private static array $keyCache = [];
+
+    public static function toPemDecrypted(string $privateKey, ?string $password = null): string
+    {
+        $cacheKey = hash('sha256', $privateKey . ($password ?? ''));
+
+        if (isset(self::$keyCache[$cacheKey])) {
+            return self::$keyCache[$cacheKey];
+        }
+
+        $pemKey = self::toPem($privateKey);
+        // ... procesar ...
+
+        self::$keyCache[$cacheKey] = $decryptedPem;
+        return $decryptedPem;
+    }
+
+    public static function clearCache(): void
+    {
+        self::$keyCache = [];
+    }
+}
+```
+
+**Consideraciones de seguridad:**
+- Las claves permanecen en memoria durante la vida del proceso
+- Proporcionar `clearCache()` para limpiar manualmente si es necesario
+- En entornos de alta seguridad, puede ser preferible no cachear
+
+---
+
+### P3. Reutilización de DOMXPath
+
+**Prioridad:** 🟡 Baja
+**Estado:** ⬜ Pendiente
+**Impacto estimado:** ⬆️ Bajo
+
+**Problema:**
+En `CertificateParser`, se crean múltiples objetos `DOMXPath` para el mismo documento.
+
+**Código actual:**
+```php
+private function parseMhCertificate(DOMDocument $document): array
+{
+    $xpath = new DOMXPath($document);  // Creado aquí
+    // ...
+}
+
+private function extractValueFromPath(DOMDocument $document, string $xpath): ?string
+{
+    $xpathObj = new DOMXPath($document);  // Creado de nuevo
+    // ...
+}
+```
+
+**Solución propuesta:**
+Pasar el objeto XPath como parámetro o almacenarlo temporalmente:
+
+```php
+private function parseMhCertificate(DOMDocument $document): array
+{
+    $xpath = new DOMXPath($document);
+
+    // Usar el mismo xpath para todas las extracciones
+    $privateKey = $this->extractValueWithXPath($xpath, '//privateKey/encodied');
+    // ...
+}
+
+private function extractValueWithXPath(DOMXPath $xpath, string $expression): ?string
+{
+    $elements = $xpath->query($expression);
+    return ($elements && $elements->length > 0)
+        ? $elements->item(0)?->nodeValue
+        : null;
+}
+```
+
+---
+
+### P4. Reducción de Llamadas al Sistema de Archivos
+
+**Prioridad:** 🟡 Baja
+**Estado:** ⬜ Pendiente
+**Impacto estimado:** ⬆️ Bajo
+
+**Problema:**
+Se realizan dos llamadas al filesystem: `file_exists()` y `file_get_contents()`.
+
+**Código actual:**
+```php
+if (!file_exists($certificateFile)) {
+    throw CertificateException::certificateNotFound($nit);
+}
+
+$xmlContent = file_get_contents($certificateFile);
+
+if ($xmlContent === false) {
+    throw CertificateException::invalidCertificate('Could not read certificate file');
+}
+```
+
+**Solución propuesta:**
+Una sola llamada con manejo de errores:
+
+```php
+$xmlContent = @file_get_contents($certificateFile);
+
+if ($xmlContent === false) {
+    if (!file_exists($certificateFile)) {
+        throw CertificateException::certificateNotFound($nit);
+    }
+    throw CertificateException::invalidCertificate('Could not read certificate file');
+}
+```
+
+**Nota:** El `@` suprime warnings, pero el error se maneja correctamente después.
+
+---
+
+### P5. Uso de JSON_THROW_ON_ERROR
+
+**Prioridad:** 🟡 Baja
+**Estado:** ⬜ Pendiente
+**Impacto estimado:** ⬆️ Muy bajo
+
+**Problema:**
+Se usa el patrón antiguo de `json_decode()` + `json_last_error()`.
+
+**Código actual:**
+```php
+$data = json_decode($content, true);
+
+if (json_last_error() !== JSON_ERROR_NONE) {
+    throw new ValidationException(
+        'Invalid JSON in request file: ' . json_last_error_msg(),
+        ['JSON parsing error']
+    );
+}
+```
+
+**Solución propuesta:**
+Usar `JSON_THROW_ON_ERROR` (PHP 7.3+):
+
+```php
+try {
+    $data = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+} catch (\JsonException $e) {
+    throw new ValidationException(
+        'Invalid JSON in request file: ' . $e->getMessage(),
+        ['JSON parsing error']
+    );
+}
+```
+
+**Beneficios:**
+- Código más limpio y moderno
+- Evita la necesidad de verificar `json_last_error()` global
+- Mejor manejo de errores con excepciones
+
+---
+
+### P6. Eliminación de Hash Placeholder No Usado
+
+**Prioridad:** 🟡 Baja
+**Estado:** ⬜ Pendiente
+**Impacto estimado:** ⬆️ Bajo
+
+**Problema:**
+`CertificateParser::generatePlaceholderHash()` genera un hash SHA256 que nunca se usa para validación.
+
+**Código actual:**
+```php
+// Se genera pero nunca se valida
+$passwordHash = $this->generatePlaceholderHash($document);
+
+return [
+    // ...
+    'passwordHash' => $passwordHash  // No se usa
+];
+```
+
+**Solución propuesta:**
+Eliminar la generación del hash si no se necesita:
+
+```php
+return [
+    'activo' => $activoBool ? 'true' : 'false',
+    'verificado' => $verificadoBool ? 'true' : 'false',
+    'privateKey' => $privateKey,
+    // passwordHash eliminado
+];
+```
+
+**Nota:** Esto es un breaking change menor si alguien depende de este campo.
+
+---
+
+### Resumen de Mejoras de Performance
+
+| # | Mejora | Impacto | Esfuerzo | Prioridad |
+|---|--------|---------|----------|-----------|
+| P1 | Caché de certificados | ⬆️ Alto | Medio | 🔴 Alta |
+| P2 | Caché de claves | ⬆️ Medio | Bajo | 🟠 Media |
+| P3 | Reutilizar DOMXPath | ⬆️ Bajo | Bajo | 🟡 Baja |
+| P4 | Reducir llamadas FS | ⬆️ Bajo | Bajo | 🟡 Baja |
+| P5 | JSON_THROW_ON_ERROR | ⬆️ Muy bajo | Bajo | 🟡 Baja |
+| P6 | Eliminar hash no usado | ⬆️ Bajo | Bajo | 🟡 Baja |
+
+### Recomendación para Alto Volumen
+
+Para escenarios de alto volumen (>100 firmas/segundo), implementar en este orden:
+
+1. **P1** - Caché de certificados (mayor impacto)
+2. **P2** - Caché de claves (complementa P1)
+3. Resto opcional según necesidad
+
+---
+
 ## Notas de Implementación
 
 ### Orden Sugerido de Implementación
@@ -459,3 +777,4 @@ Extraer fechas de validez del certificado (si están disponibles en el formato M
 | 2025-12-01 | ✅ #10 Completado: Verificación de openssl_error_string |
 | 2025-12-01 | ✅ #11 Completado: Centralizada constante en `Config` |
 | 2025-12-01 | Tests actualizados: 108 tests, 221 assertions |
+| 2025-12-01 | 📊 Documentadas 6 mejoras de performance (P1-P6) |
