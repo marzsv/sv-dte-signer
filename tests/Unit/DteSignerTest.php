@@ -236,6 +236,102 @@ class DteSignerTest extends TestCase
         unlink($tempFile);
     }
 
+    public function testSignWithDeprecatedPasswordPriField(): void
+    {
+        // Arrange - using the old field name
+        $request = [
+            'nit' => '12345678901234',
+            'passwordPri' => 'testpassword',
+            'dteJson' => ['test' => 'data']
+        ];
+
+        $this->mockValidator
+            ->expects($this->once())
+            ->method('validate')
+            ->with($this->callback(function (array $data): bool {
+                return isset($data['privateKeyPassword']) && !isset($data['passwordPri']);
+            }));
+
+        $this->mockLoader
+            ->expects($this->once())
+            ->method('loadCertificate')
+            ->with('12345678901234', 'testpassword')
+            ->willReturn(['privateKey' => 'mock-private-key']);
+
+        $this->mockJwsSigner
+            ->expects($this->once())
+            ->method('sign')
+            ->willReturn('signed.jws.token');
+
+        // Act
+        $response = @$this->signer->sign($request); // @ suppresses the deprecation notice for test
+
+        // Assert
+        $this->assertTrue($response['success']);
+        $this->assertEquals('signed.jws.token', $response['data']);
+    }
+
+    public function testSignWithDeprecatedPasswordPriTriggersDeprecation(): void
+    {
+        $request = [
+            'nit' => '12345678901234',
+            'passwordPri' => 'testpassword',
+            'dteJson' => ['test' => 'data']
+        ];
+
+        $this->mockLoader
+            ->method('loadCertificate')
+            ->willReturn(['privateKey' => 'mock-private-key']);
+
+        $this->mockJwsSigner
+            ->method('sign')
+            ->willReturn('signed.jws.token');
+
+        // Assert deprecation is triggered
+        set_error_handler(function (int $errno, string $errstr): bool {
+            $this->assertEquals(E_USER_DEPRECATED, $errno);
+            $this->assertStringContainsString('passwordPri', $errstr);
+            $this->assertStringContainsString('privateKeyPassword', $errstr);
+            return true;
+        });
+
+        $this->signer->sign($request);
+
+        restore_error_handler();
+    }
+
+    public function testSignPrivateKeyPasswordTakesPrecedenceOverPasswordPri(): void
+    {
+        // If both are provided, privateKeyPassword wins and passwordPri is ignored
+        $request = [
+            'nit' => '12345678901234',
+            'privateKeyPassword' => 'newpassword',
+            'passwordPri' => 'oldpassword',
+            'dteJson' => ['test' => 'data']
+        ];
+
+        $this->mockValidator
+            ->expects($this->once())
+            ->method('validate');
+
+        $this->mockLoader
+            ->expects($this->once())
+            ->method('loadCertificate')
+            ->with('12345678901234', 'newpassword')
+            ->willReturn(['privateKey' => 'mock-private-key']);
+
+        $this->mockJwsSigner
+            ->expects($this->once())
+            ->method('sign')
+            ->willReturn('signed.jws.token');
+
+        // Act - no deprecation should trigger since privateKeyPassword is present
+        $response = $this->signer->sign($request);
+
+        // Assert
+        $this->assertTrue($response['success']);
+    }
+
     public function testConstructorWithDefaultDependencies(): void
     {
         // Act - should not throw

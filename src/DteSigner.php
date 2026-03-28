@@ -48,6 +48,7 @@ class DteSigner
         $requestData = [];
         try {
             $requestData = $this->parseInput($input);
+            $requestData = $this->normalizeFieldNames($requestData);
             $this->requestValidator->validate($requestData);
 
             $certificateData = $this->certificateLoader->loadCertificate(
@@ -131,6 +132,26 @@ class DteSigner
     }
 
     /**
+     * Normalize deprecated field names to current names
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    private function normalizeFieldNames(array $data): array
+    {
+        if (isset($data['passwordPri']) && !isset($data['privateKeyPassword'])) {
+            @trigger_error(
+                'The field "passwordPri" is deprecated since v1.4.0, use "privateKeyPassword" instead.',
+                E_USER_DEPRECATED
+            );
+            $data['privateKeyPassword'] = $data['passwordPri'];
+            unset($data['passwordPri']);
+        }
+
+        return $data;
+    }
+
+    /**
      * Clear sensitive data from memory for security
      *
      * Overwrites sensitive values before unsetting to minimize the time
@@ -140,7 +161,7 @@ class DteSigner
      */
     private function clearSensitiveData(array &$data): void
     {
-        $sensitiveFields = ['privateKeyPassword'];
+        $sensitiveFields = ['privateKeyPassword', 'passwordPri'];
 
         foreach ($sensitiveFields as $field) {
             if (isset($data[$field])) {
