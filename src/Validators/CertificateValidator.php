@@ -8,25 +8,31 @@ use Marzsv\DteSigner\Exceptions\CertificateException;
 
 /**
  * Validates MH certificates according to DTE specifications
+ *
+ * Note: Password validation is intentionally NOT performed here.
+ * MH certificates don't store password hashes. The actual password
+ * validation happens during JWS signing when OpenSSL decrypts the
+ * private key - if the password is wrong, decryption will fail.
  */
 class CertificateValidator
 {
     /**
      * Validate certificate data from parsed XML
-     * 
+     *
      * @param array<string, mixed> $certificateData
+     * @param string $providedPassword Unused here - validated during JWS signing
      * @throws CertificateException
      */
     public function validate(array $certificateData, string $providedPassword): void
     {
         $this->validateCertificateStatus($certificateData);
         $this->validatePrivateKey($certificateData);
-        $this->validatePassword($certificateData, $providedPassword);
+        // Password validation occurs during JWS signing (OpenSSL decryption)
     }
 
     /**
      * Validate certificate is active and verified
-     * 
+     *
      * @param array<string, mixed> $certificateData
      */
     private function validateCertificateStatus(array $certificateData): void
@@ -44,7 +50,7 @@ class CertificateValidator
 
     /**
      * Validate private key is present
-     * 
+     *
      * @param array<string, mixed> $certificateData
      */
     private function validatePrivateKey(array $certificateData): void
@@ -52,22 +58,5 @@ class CertificateValidator
         if (!isset($certificateData['privateKey']) || empty($certificateData['privateKey'])) {
             throw CertificateException::invalidCertificate('Private key is missing');
         }
-    }
-
-    /**
-     * Validate password for MH certificates
-     * 
-     * @param array<string, mixed> $certificateData
-     */
-    private function validatePassword(array $certificateData, string $providedPassword): void
-    {
-        if (!isset($certificateData['passwordHash'])) {
-            throw CertificateException::invalidCertificate('Password hash is missing');
-        }
-
-        // For MH certificates, we skip password hash validation since they don't store password hashes
-        // The actual password validation will happen during JWS signing when OpenSSL decrypts the private key
-        // This ensures that incorrect passwords will be caught during the signing process
-        return;
     }
 }

@@ -13,14 +13,12 @@ use Marzsv\DteSigner\Validators\RequestValidator;
 
 /**
  * Main DTE Signer class for signing electronic documents
- * 
+ *
  * This class provides functionality to sign Documentos Tributarios Electrónicos (DTE)
  * for El Salvador using JWS RS512 digital signatures.
  */
 class DteSigner
 {
-    private const DEFAULT_CERTIFICATE_DIRECTORY = 'certificates';
-
     private RequestValidator $requestValidator;
     private CertificateLoader $certificateLoader;
     private JwsSigner $jwsSigner;
@@ -29,7 +27,7 @@ class DteSigner
      * Initialize DTE Signer with certificate directory
      */
     public function __construct(
-        string $certificateDirectory = self::DEFAULT_CERTIFICATE_DIRECTORY,
+        string $certificateDirectory = Config::DEFAULT_CERTIFICATE_DIRECTORY,
         ?RequestValidator $requestValidator = null,
         ?CertificateLoader $certificateLoader = null,
         ?JwsSigner $jwsSigner = null
@@ -47,19 +45,21 @@ class DteSigner
      */
     public function sign(array|string $input): array
     {
+        $requestData = [];
         try {
             $requestData = $this->parseInput($input);
+            $requestData = $this->normalizeFieldNames($requestData);
             $this->requestValidator->validate($requestData);
 
             $certificateData = $this->certificateLoader->loadCertificate(
                 $requestData['nit'],
-                $requestData['passwordPri']
+                $requestData['privateKeyPassword']
             );
 
             $signedJws = $this->jwsSigner->sign(
                 $requestData['dteJson'],
                 $certificateData['privateKey'],
-                $requestData['passwordPri'] // Pass password for MH certificates
+                $requestData['privateKeyPassword']
             );
 
             return ResponseBuilder::success($signedJws, 'DTE signed successfully', [
@@ -75,7 +75,7 @@ class DteSigner
                 'COD_500'
             );
         } finally {
-            $this->clearSensitiveData($requestData ?? []);
+            $this->clearSensitiveData($requestData);
         }
     }
 
@@ -132,18 +132,42 @@ class DteSigner
     }
 
     /**
-     * Clear sensitive data from memory for security
-     * 
+     * Normalize deprecated field names to current names
+     *
      * @param array<string, mixed> $data
+     * @return array<string, mixed>
      */
-    private function clearSensitiveData(array $data): void
+    private function normalizeFieldNames(array $data): array
     {
-        if (isset($data['passwordPri'])) {
+        if (isset($data['passwordPri']) && !isset($data['privateKeyPassword'])) {
+            @trigger_error(
+                'The field "passwordPri" is deprecated since v1.4.0, use "privateKeyPassword" instead.',
+                E_USER_DEPRECATED
+            );
+            $data['privateKeyPassword'] = $data['passwordPri'];
             unset($data['passwordPri']);
         }
-        
-        if (isset($data['passwordPub'])) {
-            unset($data['passwordPub']);
+
+        return $data;
+    }
+
+    /**
+     * Clear sensitive data from memory for security
+     *
+     * Overwrites sensitive values before unsetting to minimize the time
+     * passwords remain in memory.
+     *
+     * @param array<string, mixed> $data Reference to the data array
+     */
+    private function clearSensitiveData(array &$data): void
+    {
+        $sensitiveFields = ['privateKeyPassword', 'passwordPri'];
+
+        foreach ($sensitiveFields as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = str_repeat("\0", strlen((string) $data[$field]));
+                unset($data[$field]);
+            }
         }
     }
 }

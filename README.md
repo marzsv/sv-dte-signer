@@ -92,7 +92,7 @@ $signer = new DteSigner();
 // Prepare your DTE signing request
 $request = [
     'nit' => '12345678901234',
-    'passwordPri' => 'your_certificate_password',
+    'privateKeyPassword' => 'your_private_key_password',
     'dteJson' => [
         'identificacion' => [
             'version' => 1,
@@ -302,11 +302,10 @@ public function extractPayload(string $jwsToken): array
 
 ```php
 [
-    'nit' => 'string(14)',           // Required: 14-digit NIT
-    'passwordPri' => 'string(8-100)', // Required: Certificate password
-    'dteJson' => array,              // Required: DTE document data
-    'passwordPub' => 'string',       // Optional: Public key password
-    'nombreDocumento' => 'string'    // Optional: Document name
+    'nit' => 'string(14)',                    // Required: 14-digit NIT
+    'privateKeyPassword' => 'string(8-100)', // Required: Private key password
+    'dteJson' => array,                       // Required: DTE document data
+    'nombreDocumento' => 'string'             // Optional: Document name
 ]
 ```
 

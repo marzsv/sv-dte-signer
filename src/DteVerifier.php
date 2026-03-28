@@ -9,17 +9,16 @@ use Marzsv\DteSigner\Exceptions\DteSignerException;
 use Marzsv\DteSigner\Exceptions\VerificationException;
 use Marzsv\DteSigner\Signing\JwsVerifier;
 use Marzsv\DteSigner\Utils\ResponseBuilder;
+use Marzsv\DteSigner\Validators\NitValidator;
 
 /**
  * Main DTE Verifier class for verifying and extracting content from signed DTEs
- * 
- * This class provides functionality to verify JWS signatures of Documentos Tributarios 
+ *
+ * This class provides functionality to verify JWS signatures of Documentos Tributarios
  * Electrónicos (DTE) and extract the original JSON content.
  */
 class DteVerifier
 {
-    private const DEFAULT_CERTIFICATE_DIRECTORY = 'certificates';
-
     private CertificateLoader $certificateLoader;
     private JwsVerifier $jwsVerifier;
 
@@ -27,7 +26,7 @@ class DteVerifier
      * Initialize DTE Verifier with certificate directory
      */
     public function __construct(
-        string $certificateDirectory = self::DEFAULT_CERTIFICATE_DIRECTORY,
+        string $certificateDirectory = Config::DEFAULT_CERTIFICATE_DIRECTORY,
         ?CertificateLoader $certificateLoader = null,
         ?JwsVerifier $jwsVerifier = null
     ) {
@@ -37,7 +36,7 @@ class DteVerifier
 
     /**
      * Verify a signed DTE and extract the original content
-     * 
+     *
      * @param string $jwsToken The JWS token to verify
      * @param string $nit The NIT of the certificate to verify against
      * @return array<string, mixed> Response array with success/error information
@@ -52,10 +51,11 @@ class DteVerifier
                 );
             }
 
-            if (empty($nit) || strlen($nit) !== 14) {
+            $nitErrors = NitValidator::validate($nit);
+            if (!empty($nitErrors)) {
                 throw new VerificationException(
                     'Invalid NIT format',
-                    ['NIT must be exactly 14 characters long']
+                    $nitErrors
                 );
             }
 

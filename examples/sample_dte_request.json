@@ -1,6 +1,6 @@
 {
     "nit": "12345678901234",
-    "passwordPri": "testpassword",
+    "privateKeyPassword": "testpassword",
     "dteJson": {
         "identificacion": {
             "version": 1,

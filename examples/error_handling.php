@@ -20,7 +20,7 @@ $signer = new DteSigner();
 echo "1. Testing invalid NIT (too short):\n";
 $invalidNitRequest = [
     'nit' => '123456789',  // Only 9 digits instead of 14
-    'passwordPri' => 'testpassword',
+    'privateKeyPassword' => 'testpassword',
     'dteJson' => ['test' => 'data']
 ];
 
@@ -33,7 +33,7 @@ echo "   Message: " . $response['message'] . "\n\n";
 echo "2. Testing missing required fields:\n";
 $missingFieldsRequest = [
     'nit' => '12345678901234',
-    // Missing passwordPri and dteJson
+    // Missing privateKeyPassword and dteJson
 ];
 
 $response = $signer->sign($missingFieldsRequest);
@@ -52,7 +52,7 @@ echo "\n";
 echo "3. Testing invalid password (too short):\n";
 $shortPasswordRequest = [
     'nit' => '12345678901234',
-    'passwordPri' => 'short',  // Less than 8 characters
+    'privateKeyPassword' => 'short',  // Less than 8 characters
     'dteJson' => ['test' => 'data']
 ];
 
@@ -65,7 +65,7 @@ echo "   Message: " . $response['message'] . "\n\n";
 echo "4. Testing certificate not found:\n";
 $notFoundRequest = [
     'nit' => '99999999999999',  // NIT that doesn't have a certificate
-    'passwordPri' => 'testpassword',
+    'privateKeyPassword' => 'testpassword',
     'dteJson' => ['test' => 'data']
 ];
 
@@ -99,7 +99,7 @@ echo "   Message: " . $response['message'] . "\n\n";
 echo "7. Testing valid request (requires mock certificate):\n";
 $validRequest = [
     'nit' => '12345678901234',
-    'passwordPri' => 'testpassword',
+    'privateKeyPassword' => 'testpassword',
     'dteJson' => [
         'identificacion' => [
             'tipoDte' => '01',

@@ -11,17 +11,15 @@ use Marzsv\DteSigner\Exceptions\ValidationException;
  */
 class RequestValidator
 {
-    private const NIT_LENGTH = 14;
     private const MIN_PASSWORD_LENGTH = 8;
     private const MAX_PASSWORD_LENGTH = 100;
-    private const NIT_PATTERN = '/^\d{14}$/';
 
     /** @var array<string> */
-    private array $requiredFields = ['nit', 'passwordPri', 'dteJson'];
+    private array $requiredFields = ['nit', 'privateKeyPassword', 'dteJson'];
 
     /**
      * Validate a signing request
-     * 
+     *
      * @param array<string, mixed> $request
      * @throws ValidationException
      */
@@ -30,8 +28,8 @@ class RequestValidator
         $errors = [];
 
         $errors = array_merge($errors, $this->validateRequiredFields($request));
-        $errors = array_merge($errors, $this->validateNit($request['nit'] ?? ''));
-        $errors = array_merge($errors, $this->validatePassword($request['passwordPri'] ?? ''));
+        $errors = array_merge($errors, NitValidator::validate($request['nit'] ?? ''));
+        $errors = array_merge($errors, $this->validatePassword($request['privateKeyPassword'] ?? ''));
         $errors = array_merge($errors, $this->validateDteJson($request['dteJson'] ?? null));
 
         if (!empty($errors)) {
@@ -41,7 +39,7 @@ class RequestValidator
 
     /**
      * Validate that all required fields are present
-     * 
+     *
      * @param array<string, mixed> $request
      * @return array<string>
      */
@@ -53,26 +51,6 @@ class RequestValidator
             if (!array_key_exists($field, $request) || empty($request[$field])) {
                 $errors[] = "Required field '{$field}' is missing or empty";
             }
-        }
-
-        return $errors;
-    }
-
-    /**
-     * Validate NIT format (must be 14 digits)
-     * 
-     * @return array<string>
-     */
-    private function validateNit(string $nit): array
-    {
-        $errors = [];
-
-        if (strlen($nit) !== self::NIT_LENGTH) {
-            $errors[] = 'NIT must be exactly 14 characters long';
-        }
-
-        if (!preg_match(self::NIT_PATTERN, $nit)) {
-            $errors[] = 'NIT must contain only digits';
         }
 
         return $errors;
