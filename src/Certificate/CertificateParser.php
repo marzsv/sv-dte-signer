@@ -65,15 +65,21 @@ class CertificateParser
         // Instead, we generate a simple placeholder hash for compatibility
         $passwordHash = $this->generatePlaceholderHash($document);
 
+        // Extract certificate validity dates
+        $notBefore = $this->extractValue($document, 'notBefore');
+        $notAfter = $this->extractValue($document, 'notAfter');
+
         if (!$privateKey) {
             throw CertificateException::invalidCertificate('Private key not found in MH certificate');
         }
 
         return [
             'activo' => $activoBool ? 'true' : 'false',
-            'verificado' => $verificadoBool ? 'true' : 'false', 
+            'verificado' => $verificadoBool ? 'true' : 'false',
             'privateKey' => $privateKey,
-            'passwordHash' => $passwordHash
+            'passwordHash' => $passwordHash,
+            'notBefore' => $notBefore,
+            'notAfter' => $notAfter,
         ];
     }
 

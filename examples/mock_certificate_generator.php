@@ -78,12 +78,17 @@ class MockCertificateGenerator
         
         $nit = self::TEST_NIT;
         
+        $notBefore = date('Y-m-d\TH:i:s');
+        $notAfter = date('Y-m-d\TH:i:s', strtotime('+1 year'));
+
         return <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <CertificadoMH>
     <nit>{$nit}</nit>
     <activo>{$data['activo']}</activo>
     <verificado/>
+    <notBefore>{$notBefore}</notBefore>
+    <notAfter>{$notAfter}</notAfter>
     <privateKey>
         <clave>test_key_identifier</clave>
         <encodied>{$privateKeyBase64}</encodied>

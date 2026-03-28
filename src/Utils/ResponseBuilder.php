@@ -15,16 +15,30 @@ class ResponseBuilder
 
     /**
      * Build a success response with the signed JWS
-     * 
+     *
+     * @param array<string, mixed> $certificateDates Optional certificate validity dates
      * @return array<string, mixed>
      */
-    public static function success(string $signedJws, string $message = self::SUCCESS_MESSAGE): array
-    {
-        return [
+    public static function success(
+        string $signedJws,
+        string $message = self::SUCCESS_MESSAGE,
+        array $certificateDates = []
+    ): array {
+        $response = [
             'success' => true,
             'message' => $message,
-            'data' => $signedJws
+            'data' => $signedJws,
         ];
+
+        if (!empty($certificateDates['notBefore'])) {
+            $response['notBefore'] = $certificateDates['notBefore'];
+        }
+
+        if (!empty($certificateDates['notAfter'])) {
+            $response['notAfter'] = $certificateDates['notAfter'];
+        }
+
+        return $response;
     }
 
     /**

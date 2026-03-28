@@ -90,6 +90,39 @@ class ResponseBuilderTest extends TestCase
         $this->assertEquals([], $response['errors']);
     }
 
+    public function testSuccessResponseWithCertificateDates(): void
+    {
+        // Arrange
+        $signedJws = 'eyJhbGciOiJSUzUxMiJ9.eyJkYXRhIjoidGVzdCJ9.signature';
+        $certificateDates = [
+            'notBefore' => '2025-01-01T00:00:00',
+            'notAfter' => '2026-01-01T00:00:00',
+        ];
+
+        // Act
+        $response = ResponseBuilder::success($signedJws, 'DTE signed successfully', $certificateDates);
+
+        // Assert
+        $this->assertTrue($response['success']);
+        $this->assertEquals($signedJws, $response['data']);
+        $this->assertEquals('2025-01-01T00:00:00', $response['notBefore']);
+        $this->assertEquals('2026-01-01T00:00:00', $response['notAfter']);
+    }
+
+    public function testSuccessResponseWithoutCertificateDates(): void
+    {
+        // Arrange
+        $signedJws = 'eyJhbGciOiJSUzUxMiJ9.eyJkYXRhIjoidGVzdCJ9.signature';
+
+        // Act
+        $response = ResponseBuilder::success($signedJws);
+
+        // Assert
+        $this->assertTrue($response['success']);
+        $this->assertArrayNotHasKey('notBefore', $response);
+        $this->assertArrayNotHasKey('notAfter', $response);
+    }
+
     public function testVerificationSuccessResponse(): void
     {
         // Arrange
