@@ -62,7 +62,10 @@ class DteSigner
                 $requestData['passwordPri'] // Pass password for MH certificates
             );
 
-            return ResponseBuilder::success($signedJws);
+            return ResponseBuilder::success($signedJws, 'DTE signed successfully', [
+                'notBefore' => $certificateData['notBefore'] ?? null,
+                'notAfter' => $certificateData['notAfter'] ?? null,
+            ]);
 
         } catch (DteSignerException $e) {
             return ResponseBuilder::error($e);
