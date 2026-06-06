@@ -4,16 +4,25 @@ declare(strict_types=1);
 
 namespace Marzsv\DteSigner\Signing;
 
+use Marzsv\DteSigner\Contracts\JwsSignerInterface;
+use Marzsv\DteSigner\Contracts\KeyFormatterInterface;
 use Marzsv\DteSigner\Exceptions\DteSignerException;
-use Marzsv\DteSigner\Utils\KeyFormatter;
+use Marzsv\DteSigner\Utils\Formatters\CompositeKeyFormatter;
 use Firebase\JWT\JWT;
 
 /**
  * Creates JWS signatures using RS512 algorithm
  */
-class JwsSigner
+class JwsSigner implements JwsSignerInterface
 {
     private const ALGORITHM = 'RS512';
+
+    private KeyFormatterInterface $keyFormatter;
+
+    public function __construct(?KeyFormatterInterface $keyFormatter = null)
+    {
+        $this->keyFormatter = $keyFormatter ?? new CompositeKeyFormatter();
+    }
 
     /**
      * Sign DTE JSON data and return JWS compact serialization
@@ -39,7 +48,7 @@ class JwsSigner
             }
 
             // Process the private key (handle both PEM and base64 formats)
-            $processedKey = KeyFormatter::toPemDecrypted($privateKey, $password);
+            $processedKey = $this->keyFormatter->toPemDecrypted($privateKey, $password);
 
             $header = ['alg' => self::ALGORITHM, 'typ' => 'JWT'];
 

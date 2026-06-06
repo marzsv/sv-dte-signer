@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Marzsv\DteSigner;
 
 use Marzsv\DteSigner\Certificate\CertificateLoader;
+use Marzsv\DteSigner\Contracts\CertificateLoaderInterface;
+use Marzsv\DteSigner\Contracts\JwsSignerInterface;
 use Marzsv\DteSigner\Exceptions\DteSignerException;
 use Marzsv\DteSigner\Exceptions\ValidationException;
 use Marzsv\DteSigner\Signing\JwsSigner;
 use Marzsv\DteSigner\Utils\ResponseBuilder;
 use Marzsv\DteSigner\Validators\RequestValidator;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Main DTE Signer class for signing electronic documents
@@ -20,8 +24,9 @@ use Marzsv\DteSigner\Validators\RequestValidator;
 class DteSigner
 {
     private RequestValidator $requestValidator;
-    private CertificateLoader $certificateLoader;
-    private JwsSigner $jwsSigner;
+    private CertificateLoaderInterface $certificateLoader;
+    private JwsSignerInterface $jwsSigner;
+    private LoggerInterface $logger;
 
     /**
      * Initialize DTE Signer with certificate directory
@@ -29,12 +34,14 @@ class DteSigner
     public function __construct(
         string $certificateDirectory = Config::DEFAULT_CERTIFICATE_DIRECTORY,
         ?RequestValidator $requestValidator = null,
-        ?CertificateLoader $certificateLoader = null,
-        ?JwsSigner $jwsSigner = null
+        ?CertificateLoaderInterface $certificateLoader = null,
+        ?JwsSignerInterface $jwsSigner = null,
+        ?LoggerInterface $logger = null
     ) {
         $this->requestValidator = $requestValidator ?? new RequestValidator();
         $this->certificateLoader = $certificateLoader ?? new CertificateLoader($certificateDirectory);
         $this->jwsSigner = $jwsSigner ?? new JwsSigner();
+        $this->logger = $logger ?? new NullLogger();
     }
 
     /**

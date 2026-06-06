@@ -4,30 +4,41 @@ declare(strict_types=1);
 
 namespace Marzsv\DteSigner\Certificate;
 
+use Marzsv\DteSigner\Contracts\CertificateLoaderInterface;
+use Marzsv\DteSigner\Contracts\KeyFormatterInterface;
 use Marzsv\DteSigner\Exceptions\CertificateException;
 use Marzsv\DteSigner\Exceptions\DteSignerException;
+use Marzsv\DteSigner\Utils\Formatters\CompositeKeyFormatter;
 use Marzsv\DteSigner\Utils\KeyFormatter;
 use Marzsv\DteSigner\Validators\CertificateValidator;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Loads and validates XML certificates from the file system
  */
-class CertificateLoader
+class CertificateLoader implements CertificateLoaderInterface
 {
     private const CERTIFICATE_EXTENSION = '.crt';
 
     private string $certificateDirectory;
     private CertificateParser $parser;
     private CertificateValidator $validator;
+    private KeyFormatterInterface $keyFormatter;
+    private LoggerInterface $logger;
 
     public function __construct(
         string $certificateDirectory,
         ?CertificateParser $parser = null,
-        ?CertificateValidator $validator = null
+        ?CertificateValidator $validator = null,
+        ?LoggerInterface $logger = null,
+        ?KeyFormatterInterface $keyFormatter = null
     ) {
         $this->certificateDirectory = rtrim($certificateDirectory, '/');
         $this->parser = $parser ?? new CertificateParser();
         $this->validator = $validator ?? new CertificateValidator();
+        $this->logger = $logger ?? new NullLogger();
+        $this->keyFormatter = $keyFormatter ?? new CompositeKeyFormatter();
     }
 
     /**
@@ -93,7 +104,7 @@ class CertificateLoader
     {
         try {
             // Process the private key (handle both PEM and base64 formats)
-            $processedKey = KeyFormatter::toPem($privateKey);
+            $processedKey = $this->keyFormatter->toPem($privateKey);
 
             // Get the private key resource
             $privateKeyResource = openssl_pkey_get_private($processedKey);

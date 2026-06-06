@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Marzsv\DteSigner\Signing;
 
+use Marzsv\DteSigner\Contracts\JwsVerifierInterface;
 use Marzsv\DteSigner\Exceptions\VerificationException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -11,7 +12,7 @@ use Firebase\JWT\Key;
 /**
  * Verifies JWS signatures and extracts payloads using RS512 algorithm
  */
-class JwsVerifier
+class JwsVerifier implements JwsVerifierInterface
 {
     private const ALGORITHM = 'RS512';
     private const JWT_PARTS_COUNT = 3;

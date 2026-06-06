@@ -5,11 +5,17 @@ declare(strict_types=1);
 namespace Marzsv\DteSigner;
 
 use Marzsv\DteSigner\Certificate\CertificateLoader;
+use Marzsv\DteSigner\Contracts\CertificateLoaderInterface;
+use Marzsv\DteSigner\Contracts\JwsVerifierInterface;
+use Marzsv\DteSigner\Contracts\RateLimiterInterface;
 use Marzsv\DteSigner\Exceptions\DteSignerException;
 use Marzsv\DteSigner\Exceptions\VerificationException;
+use Marzsv\DteSigner\Security\NullRateLimiter;
 use Marzsv\DteSigner\Signing\JwsVerifier;
 use Marzsv\DteSigner\Utils\ResponseBuilder;
 use Marzsv\DteSigner\Validators\NitValidator;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Main DTE Verifier class for verifying and extracting content from signed DTEs
@@ -19,19 +25,25 @@ use Marzsv\DteSigner\Validators\NitValidator;
  */
 class DteVerifier
 {
-    private CertificateLoader $certificateLoader;
-    private JwsVerifier $jwsVerifier;
+    private CertificateLoaderInterface $certificateLoader;
+    private JwsVerifierInterface $jwsVerifier;
+    private LoggerInterface $logger;
+    private RateLimiterInterface $rateLimiter;
 
     /**
      * Initialize DTE Verifier with certificate directory
      */
     public function __construct(
         string $certificateDirectory = Config::DEFAULT_CERTIFICATE_DIRECTORY,
-        ?CertificateLoader $certificateLoader = null,
-        ?JwsVerifier $jwsVerifier = null
+        ?CertificateLoaderInterface $certificateLoader = null,
+        ?JwsVerifierInterface $jwsVerifier = null,
+        ?LoggerInterface $logger = null,
+        ?RateLimiterInterface $rateLimiter = null
     ) {
         $this->certificateLoader = $certificateLoader ?? new CertificateLoader($certificateDirectory);
         $this->jwsVerifier = $jwsVerifier ?? new JwsVerifier();
+        $this->logger = $logger ?? new NullLogger();
+        $this->rateLimiter = $rateLimiter ?? new NullRateLimiter();
     }
 
     /**
@@ -48,6 +60,13 @@ class DteVerifier
                 throw new VerificationException(
                     'JWS token cannot be empty',
                     ['JWS token is required']
+                );
+            }
+
+            if (!$this->rateLimiter->isAllowed($nit)) {
+                throw new VerificationException(
+                    'Too many verification attempts',
+                    ['Rate limit exceeded']
                 );
             }
 
@@ -78,14 +97,24 @@ class DteVerifier
                 );
             }
 
+            $this->rateLimiter->reset($nit);
+
             return ResponseBuilder::verificationSuccess(
                 $payload,
                 'DTE signature verified successfully'
             );
 
         } catch (DteSignerException $e) {
+            if (!empty($nit) && NitValidator::isValid($nit)) {
+                $this->rateLimiter->recordAttempt($nit);
+            }
+
             return ResponseBuilder::error($e);
         } catch (\Exception $e) {
+            if (!empty($nit) && NitValidator::isValid($nit)) {
+                $this->rateLimiter->recordAttempt($nit);
+            }
+
             return ResponseBuilder::genericError(
                 'Unexpected verification error: ' . $e->getMessage(),
                 'COD_500'
