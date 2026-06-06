@@ -136,6 +136,7 @@ class JwsSignerTest extends TestCase
         // Assert
         $parts = explode('.', $result);
         $header = json_decode(base64_decode(strtr($parts[0], '-_', '+/')), true);
+        $this->assertIsArray($header);
 
         $this->assertEquals('RS512', $header['alg']);
         $this->assertEquals('JWT', $header['typ']);
@@ -214,6 +215,7 @@ class JwsSignerTest extends TestCase
 
         // Verify payload integrity
         $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
+        $this->assertIsArray($payload);
         $this->assertEquals($dteJson['resumen']['totalPagar'], $payload['resumen']['totalPagar']);
     }
 }

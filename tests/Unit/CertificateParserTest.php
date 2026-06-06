@@ -194,7 +194,9 @@ XML;
 
         // Assert - hash should be 64 chars (SHA256)
         $this->assertNotEmpty($result['passwordHash']);
-        $this->assertEquals(64, strlen($result['passwordHash']));
+        $hash = $result['passwordHash'];
+        $this->assertIsString($hash);
+        $this->assertEquals(64, strlen($hash));
     }
 
     public function testPasswordHashIsConsistent(): void

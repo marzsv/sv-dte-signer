@@ -89,7 +89,9 @@ class DteSignerTest extends TestCase
         // Assert
         $this->assertFalse($response['success']);
         $this->assertEquals('COD_803', $response['errorCode']);
-        $this->assertContains('NIT must be 14 digits', $response['errors']);
+        $errors = $response['errors'];
+        $this->assertIsArray($errors);
+        $this->assertContains('NIT must be 14 digits', $errors);
     }
 
     public function testSignCertificateNotFound(): void
@@ -169,7 +171,9 @@ class DteSignerTest extends TestCase
         // Assert
         $this->assertFalse($response['success']);
         $this->assertEquals('COD_500', $response['errorCode']);
-        $this->assertStringContainsString('Unexpected error', $response['message']);
+        $message = $response['message'];
+        $this->assertIsString($message);
+        $this->assertStringContainsString('Unexpected error', $message);
     }
 
     public function testSignFromJsonFile(): void
@@ -216,7 +220,10 @@ class DteSignerTest extends TestCase
         // Assert
         $this->assertFalse($response['success']);
         $this->assertEquals('COD_803', $response['errorCode']);
-        $this->assertStringContainsString('File does not exist', $response['errors'][0]);
+        $errors = $response['errors'];
+        $this->assertIsArray($errors);
+        $this->assertCount(1, $errors);
+        $this->assertStringContainsString('File does not exist', $errors[0]);
     }
 
     public function testSignFromInvalidJsonFile(): void

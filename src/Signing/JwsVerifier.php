@@ -138,11 +138,18 @@ class JwsVerifier
             }
 
             $payload = json_decode($decodedPayload, true);
-            
+
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new VerificationException(
                     'Invalid JSON in JWT payload: ' . json_last_error_msg(),
                     ['JSON decode error']
+                );
+            }
+
+            if (!is_array($payload)) {
+                throw new VerificationException(
+                    'Decoded payload is not an array',
+                    ['JSON structure error']
                 );
             }
 

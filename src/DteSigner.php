@@ -39,7 +39,7 @@ class DteSigner
 
     /**
      * Sign a DTE document
-     * 
+     *
      * @param array<string, mixed>|string $input Either an array with signing data or a file path to JSON
      * @return array<string, mixed> Response array with success/error information
      */
@@ -51,16 +51,22 @@ class DteSigner
             $requestData = $this->normalizeFieldNames($requestData);
             $this->requestValidator->validate($requestData);
 
-            $certificateData = $this->certificateLoader->loadCertificate(
-                $requestData['nit'],
-                $requestData['privateKeyPassword']
-            );
+            $nit = $requestData['nit'];
+            $password = $requestData['privateKeyPassword'];
+            $dteJson = $requestData['dteJson'];
 
-            $signedJws = $this->jwsSigner->sign(
-                $requestData['dteJson'],
-                $certificateData['privateKey'],
-                $requestData['privateKeyPassword']
-            );
+            if (!is_string($nit) || !is_string($password) || !is_array($dteJson)) {
+                throw new ValidationException('Invalid request data types', ['Type validation error']);
+            }
+
+            $certificateData = $this->certificateLoader->loadCertificate($nit, $password);
+
+            $privateKey = $certificateData['privateKey'] ?? null;
+            if (!is_string($privateKey)) {
+                throw new ValidationException('Invalid private key in certificate', ['Certificate data error']);
+            }
+
+            $signedJws = $this->jwsSigner->sign($dteJson, $privateKey, $password);
 
             return ResponseBuilder::success($signedJws, 'DTE signed successfully', [
                 'notBefore' => $certificateData['notBefore'] ?? null,
@@ -97,7 +103,7 @@ class DteSigner
 
     /**
      * Load request data from JSON file
-     * 
+     *
      * @return array<string, mixed>
      * @throws ValidationException
      */
@@ -111,7 +117,7 @@ class DteSigner
         }
 
         $content = file_get_contents($filePath);
-        
+
         if ($content === false) {
             throw new ValidationException(
                 "Could not read request file: {$filePath}",
@@ -120,11 +126,18 @@ class DteSigner
         }
 
         $data = json_decode($content, true);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new ValidationException(
                 'Invalid JSON in request file: ' . json_last_error_msg(),
                 ['JSON parsing error']
+            );
+        }
+
+        if (!is_array($data)) {
+            throw new ValidationException(
+                'Request file must contain a JSON object',
+                ['Invalid JSON structure']
             );
         }
 
@@ -164,8 +177,8 @@ class DteSigner
         $sensitiveFields = ['privateKeyPassword', 'passwordPri'];
 
         foreach ($sensitiveFields as $field) {
-            if (isset($data[$field])) {
-                $data[$field] = str_repeat("\0", strlen((string) $data[$field]));
+            if (isset($data[$field]) && is_string($data[$field])) {
+                $data[$field] = str_repeat("\0", strlen($data[$field]));
                 unset($data[$field]);
             }
         }

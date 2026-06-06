@@ -88,7 +88,9 @@ class DteVerifierTest extends TestCase
 
         // Assert
         $this->assertFalse($response['success']);
-        $this->assertStringContainsString('Invalid JWS signature', $response['message']);
+        $message = $response['message'];
+        $this->assertIsString($message);
+        $this->assertStringContainsString('Invalid JWS signature', $message);
         $this->assertEquals('COD_820', $response['errorCode']);
     }
 
@@ -103,7 +105,9 @@ class DteVerifierTest extends TestCase
 
         // Assert
         $this->assertFalse($response['success']);
-        $this->assertStringContainsString('JWS token cannot be empty', $response['message']);
+        $message = $response['message'];
+        $this->assertIsString($message);
+        $this->assertStringContainsString('JWS token cannot be empty', $message);
         $this->assertEquals('COD_820', $response['errorCode']);
     }
 
@@ -118,7 +122,9 @@ class DteVerifierTest extends TestCase
 
         // Assert
         $this->assertFalse($response['success']);
-        $this->assertStringContainsString('Invalid NIT format', $response['message']);
+        $message = $response['message'];
+        $this->assertIsString($message);
+        $this->assertStringContainsString('Invalid NIT format', $message);
         $this->assertEquals('COD_820', $response['errorCode']);
     }
 
@@ -159,7 +165,9 @@ class DteVerifierTest extends TestCase
 
         // Assert
         $this->assertTrue($response['success']);
-        $this->assertStringContainsString('signature not verified', $response['message']);
+        $message = $response['message'];
+        $this->assertIsString($message);
+        $this->assertStringContainsString('signature not verified', $message);
         $this->assertEquals($expectedPayload, $response['data']);
     }
 
@@ -173,7 +181,9 @@ class DteVerifierTest extends TestCase
 
         // Assert
         $this->assertFalse($response['success']);
-        $this->assertStringContainsString('JWS token cannot be empty', $response['message']);
+        $message = $response['message'];
+        $this->assertIsString($message);
+        $this->assertStringContainsString('JWS token cannot be empty', $message);
         $this->assertEquals('COD_820', $response['errorCode']);
     }
 
@@ -196,7 +206,9 @@ class DteVerifierTest extends TestCase
 
         // Assert
         $this->assertFalse($response['success']);
-        $this->assertStringContainsString('Invalid JWT format', $response['message']);
+        $message = $response['message'];
+        $this->assertIsString($message);
+        $this->assertStringContainsString('Invalid JWT format', $message);
         $this->assertEquals('COD_820', $response['errorCode']);
     }
 
@@ -217,7 +229,9 @@ class DteVerifierTest extends TestCase
 
         // Assert
         $this->assertFalse($response['success']);
-        $this->assertStringContainsString('Unexpected verification error', $response['message']);
+        $message = $response['message'];
+        $this->assertIsString($message);
+        $this->assertStringContainsString('Unexpected verification error', $message);
         $this->assertEquals('COD_500', $response['errorCode']);
     }
 
@@ -237,7 +251,9 @@ class DteVerifierTest extends TestCase
 
         // Assert
         $this->assertFalse($response['success']);
-        $this->assertStringContainsString('Unexpected extraction error', $response['message']);
+        $message = $response['message'];
+        $this->assertIsString($message);
+        $this->assertStringContainsString('Unexpected extraction error', $message);
         $this->assertEquals('COD_500', $response['errorCode']);
     }
 }

@@ -77,7 +77,7 @@ class CertificateLoader
 
         $certificateData = $this->parser->parse($xmlContent);
 
-        if (empty($certificateData['privateKey'])) {
+        if (empty($certificateData['privateKey']) || !is_string($certificateData['privateKey'])) {
             throw CertificateException::invalidCertificate('No private key found in certificate');
         }
 

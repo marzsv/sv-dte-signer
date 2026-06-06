@@ -60,9 +60,9 @@ class DteVerifier
             }
 
             $publicKey = $this->certificateLoader->getPublicKey($nit);
-            
+
             $verificationResult = $this->jwsVerifier->verifySignature($jwsToken, $publicKey);
-            
+
             if (!$verificationResult['valid']) {
                 throw new VerificationException(
                     'Invalid JWS signature',
@@ -70,8 +70,16 @@ class DteVerifier
                 );
             }
 
+            $payload = $verificationResult['payload'];
+            if (!is_array($payload)) {
+                throw new VerificationException(
+                    'Invalid payload type from verification',
+                    ['Payload type error']
+                );
+            }
+
             return ResponseBuilder::verificationSuccess(
-                $verificationResult['payload'],
+                $payload,
                 'DTE signature verified successfully'
             );
 

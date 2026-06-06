@@ -28,8 +28,15 @@ class RequestValidator
         $errors = [];
 
         $errors = array_merge($errors, $this->validateRequiredFields($request));
-        $errors = array_merge($errors, NitValidator::validate($request['nit'] ?? ''));
-        $errors = array_merge($errors, $this->validatePassword($request['privateKeyPassword'] ?? ''));
+
+        $nit = $request['nit'] ?? '';
+        $nit = is_string($nit) ? $nit : '';
+        $errors = array_merge($errors, NitValidator::validate($nit));
+
+        $password = $request['privateKeyPassword'] ?? '';
+        $password = is_string($password) ? $password : '';
+        $errors = array_merge($errors, $this->validatePassword($password));
+
         $errors = array_merge($errors, $this->validateDteJson($request['dteJson'] ?? null));
 
         if (!empty($errors)) {
