@@ -53,6 +53,8 @@ class DteSigner
     public function sign(array|string $input): array
     {
         $requestData = [];
+        $nit = null;
+
         try {
             $requestData = $this->parseInput($input);
             $requestData = $this->normalizeFieldNames($requestData);
@@ -66,6 +68,8 @@ class DteSigner
                 throw new ValidationException('Invalid request data types', ['Type validation error']);
             }
 
+            $this->logger->info('DTE signing started', ['nit' => $nit]);
+
             $certificateData = $this->certificateLoader->loadCertificate($nit, $password);
 
             $privateKey = $certificateData['privateKey'] ?? null;
@@ -75,14 +79,30 @@ class DteSigner
 
             $signedJws = $this->jwsSigner->sign($dteJson, $privateKey, $password);
 
+            $this->logger->info('DTE signing successful', ['nit' => $nit]);
+
             return ResponseBuilder::success($signedJws, 'DTE signed successfully', [
                 'notBefore' => $certificateData['notBefore'] ?? null,
                 'notAfter' => $certificateData['notAfter'] ?? null,
             ]);
 
         } catch (DteSignerException $e) {
+            if ($nit !== null) {
+                $this->logger->warning('DTE signing failed', [
+                    'nit' => $nit,
+                    'errorCode' => $e->getErrorCode(),
+                ]);
+            }
+
             return ResponseBuilder::error($e);
         } catch (\Exception $e) {
+            if ($nit !== null) {
+                $this->logger->warning('DTE signing failed', [
+                    'nit' => $nit,
+                    'errorCode' => 'COD_500',
+                ]);
+            }
+
             return ResponseBuilder::genericError(
                 'Unexpected error: ' . $e->getMessage(),
                 'COD_500'

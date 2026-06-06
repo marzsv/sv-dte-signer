@@ -78,6 +78,11 @@ class DteVerifier
                 );
             }
 
+            $this->logger->info('DTE verification started', [
+                'nit' => $nit,
+                'token_hash' => md5($jwsToken),
+            ]);
+
             $publicKey = $this->certificateLoader->getPublicKey($nit);
 
             $verificationResult = $this->jwsVerifier->verifySignature($jwsToken, $publicKey);
@@ -99,6 +104,8 @@ class DteVerifier
 
             $this->rateLimiter->reset($nit);
 
+            $this->logger->info('DTE verification successful', ['nit' => $nit]);
+
             return ResponseBuilder::verificationSuccess(
                 $payload,
                 'DTE signature verified successfully'
@@ -107,12 +114,20 @@ class DteVerifier
         } catch (DteSignerException $e) {
             if (!empty($nit) && NitValidator::isValid($nit)) {
                 $this->rateLimiter->recordAttempt($nit);
+                $this->logger->warning('DTE verification failed', [
+                    'nit' => $nit,
+                    'errorCode' => $e->getErrorCode(),
+                ]);
             }
 
             return ResponseBuilder::error($e);
         } catch (\Exception $e) {
             if (!empty($nit) && NitValidator::isValid($nit)) {
                 $this->rateLimiter->recordAttempt($nit);
+                $this->logger->warning('DTE verification failed', [
+                    'nit' => $nit,
+                    'errorCode' => 'COD_500',
+                ]);
             }
 
             return ResponseBuilder::genericError(
@@ -124,10 +139,10 @@ class DteVerifier
 
     /**
      * Extract payload from JWS token without signature verification
-     * 
+     *
      * WARNING: This method does not verify the signature. Use only when
      * signature verification is not required or has been done elsewhere.
-     * 
+     *
      * @param string $jwsToken The JWS token to extract payload from
      * @return array<string, mixed> Response array with success/error information
      */
@@ -141,7 +156,13 @@ class DteVerifier
                 );
             }
 
+            $this->logger->info('DTE payload extraction started (signature not verified)', [
+                'token_hash' => md5($jwsToken),
+            ]);
+
             $payload = $this->jwsVerifier->extractPayload($jwsToken);
+
+            $this->logger->info('DTE payload extraction successful');
 
             return ResponseBuilder::verificationSuccess(
                 $payload,
@@ -149,8 +170,16 @@ class DteVerifier
             );
 
         } catch (DteSignerException $e) {
+            $this->logger->warning('DTE payload extraction failed', [
+                'errorCode' => $e->getErrorCode(),
+            ]);
+
             return ResponseBuilder::error($e);
         } catch (\Exception $e) {
+            $this->logger->warning('DTE payload extraction failed', [
+                'errorCode' => 'COD_500',
+            ]);
+
             return ResponseBuilder::genericError(
                 'Unexpected extraction error: ' . $e->getMessage(),
                 'COD_500'
