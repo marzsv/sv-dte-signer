@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Marzsv\DteSigner;
 
+use Marzsv\DteSigner\Cache\NullCache;
 use Marzsv\DteSigner\Certificate\CertificateLoader;
+use Marzsv\DteSigner\Contracts\CacheInterface;
 use Marzsv\DteSigner\Contracts\CertificateLoaderInterface;
 use Marzsv\DteSigner\Contracts\JwsSignerInterface;
 use Marzsv\DteSigner\Exceptions\DteSignerException;
@@ -27,6 +29,7 @@ class DteSigner
     private CertificateLoaderInterface $certificateLoader;
     private JwsSignerInterface $jwsSigner;
     private LoggerInterface $logger;
+    private CacheInterface $cache;
 
     /**
      * Initialize DTE Signer with certificate directory
@@ -36,10 +39,12 @@ class DteSigner
         ?RequestValidator $requestValidator = null,
         ?CertificateLoaderInterface $certificateLoader = null,
         ?JwsSignerInterface $jwsSigner = null,
-        ?LoggerInterface $logger = null
+        ?LoggerInterface $logger = null,
+        ?CacheInterface $cache = null
     ) {
+        $this->cache = $cache ?? new NullCache();
         $this->requestValidator = $requestValidator ?? new RequestValidator();
-        $this->certificateLoader = $certificateLoader ?? new CertificateLoader($certificateDirectory);
+        $this->certificateLoader = $certificateLoader ?? new CertificateLoader($certificateDirectory, null, null, null, $this->cache);
         $this->jwsSigner = $jwsSigner ?? new JwsSigner();
         $this->logger = $logger ?? new NullLogger();
     }

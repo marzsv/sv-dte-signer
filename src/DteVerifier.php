@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Marzsv\DteSigner;
 
+use Marzsv\DteSigner\Cache\NullCache;
 use Marzsv\DteSigner\Certificate\CertificateLoader;
+use Marzsv\DteSigner\Contracts\CacheInterface;
 use Marzsv\DteSigner\Contracts\CertificateLoaderInterface;
 use Marzsv\DteSigner\Contracts\JwsVerifierInterface;
 use Marzsv\DteSigner\Contracts\RateLimiterInterface;
@@ -29,6 +31,7 @@ class DteVerifier
     private JwsVerifierInterface $jwsVerifier;
     private LoggerInterface $logger;
     private RateLimiterInterface $rateLimiter;
+    private CacheInterface $cache;
 
     /**
      * Initialize DTE Verifier with certificate directory
@@ -38,9 +41,11 @@ class DteVerifier
         ?CertificateLoaderInterface $certificateLoader = null,
         ?JwsVerifierInterface $jwsVerifier = null,
         ?LoggerInterface $logger = null,
-        ?RateLimiterInterface $rateLimiter = null
+        ?RateLimiterInterface $rateLimiter = null,
+        ?CacheInterface $cache = null
     ) {
-        $this->certificateLoader = $certificateLoader ?? new CertificateLoader($certificateDirectory);
+        $this->cache = $cache ?? new NullCache();
+        $this->certificateLoader = $certificateLoader ?? new CertificateLoader($certificateDirectory, null, null, null, $this->cache);
         $this->jwsVerifier = $jwsVerifier ?? new JwsVerifier();
         $this->logger = $logger ?? new NullLogger();
         $this->rateLimiter = $rateLimiter ?? new NullRateLimiter();

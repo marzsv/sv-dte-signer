@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Marzsv\DteSigner\Certificate;
 
+use Marzsv\DteSigner\Cache\NullCache;
+use Marzsv\DteSigner\Contracts\CacheInterface;
 use Marzsv\DteSigner\Contracts\CertificateLoaderInterface;
 use Marzsv\DteSigner\Contracts\KeyFormatterInterface;
 use Marzsv\DteSigner\Exceptions\CertificateException;
@@ -11,8 +13,6 @@ use Marzsv\DteSigner\Exceptions\DteSignerException;
 use Marzsv\DteSigner\Utils\Formatters\CompositeKeyFormatter;
 use Marzsv\DteSigner\Utils\KeyFormatter;
 use Marzsv\DteSigner\Validators\CertificateValidator;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * Loads and validates XML certificates from the file system
@@ -25,20 +25,20 @@ class CertificateLoader implements CertificateLoaderInterface
     private CertificateParser $parser;
     private CertificateValidator $validator;
     private KeyFormatterInterface $keyFormatter;
-    private LoggerInterface $logger;
+    private CacheInterface $cache;
 
     public function __construct(
         string $certificateDirectory,
         ?CertificateParser $parser = null,
         ?CertificateValidator $validator = null,
-        ?LoggerInterface $logger = null,
-        ?KeyFormatterInterface $keyFormatter = null
+        ?KeyFormatterInterface $keyFormatter = null,
+        ?CacheInterface $cache = null
     ) {
         $this->certificateDirectory = rtrim($certificateDirectory, '/');
         $this->parser = $parser ?? new CertificateParser();
         $this->validator = $validator ?? new CertificateValidator();
-        $this->logger = $logger ?? new NullLogger();
         $this->keyFormatter = $keyFormatter ?? new CompositeKeyFormatter();
+        $this->cache = $cache ?? new NullCache();
     }
 
     /**
@@ -49,6 +49,14 @@ class CertificateLoader implements CertificateLoaderInterface
      */
     public function loadCertificate(string $nit, string $password): array
     {
+        $cacheKey = "cert:{$nit}";
+
+        $cached = $this->cache->get($cacheKey);
+        if (is_array($cached)) {
+            $this->validator->validate($cached, $password);
+            return $cached;
+        }
+
         $certificateFile = $this->buildCertificatePath($nit);
 
         if (!file_exists($certificateFile)) {
@@ -64,6 +72,8 @@ class CertificateLoader implements CertificateLoaderInterface
         $certificateData = $this->parser->parse($xmlContent);
         $this->validator->validate($certificateData, $password);
 
+        $this->cache->put($cacheKey, $certificateData);
+
         return $certificateData;
     }
 
@@ -74,25 +84,43 @@ class CertificateLoader implements CertificateLoaderInterface
      */
     public function getPublicKey(string $nit): string
     {
-        $certificateFile = $this->buildCertificatePath($nit);
+        $publicKeyCacheKey = "pubkey:{$nit}";
 
-        if (!file_exists($certificateFile)) {
-            throw CertificateException::certificateNotFound($nit);
+        $cachedPublicKey = $this->cache->get($publicKeyCacheKey);
+        if (is_string($cachedPublicKey)) {
+            return $cachedPublicKey;
         }
 
-        $xmlContent = file_get_contents($certificateFile);
+        $certificateCacheKey = "cert:{$nit}";
+        $cachedCert = $this->cache->get($certificateCacheKey);
 
-        if ($xmlContent === false) {
-            throw CertificateException::invalidCertificate('Could not read certificate file');
+        if (is_array($cachedCert)) {
+            $certificateData = $cachedCert;
+        } else {
+            $certificateFile = $this->buildCertificatePath($nit);
+
+            if (!file_exists($certificateFile)) {
+                throw CertificateException::certificateNotFound($nit);
+            }
+
+            $xmlContent = file_get_contents($certificateFile);
+
+            if ($xmlContent === false) {
+                throw CertificateException::invalidCertificate('Could not read certificate file');
+            }
+
+            $certificateData = $this->parser->parse($xmlContent);
+            $this->cache->put($certificateCacheKey, $certificateData);
         }
-
-        $certificateData = $this->parser->parse($xmlContent);
 
         if (empty($certificateData['privateKey']) || !is_string($certificateData['privateKey'])) {
             throw CertificateException::invalidCertificate('No private key found in certificate');
         }
 
-        return $this->extractPublicKeyFromPrivateKey($certificateData['privateKey']);
+        $publicKey = $this->extractPublicKeyFromPrivateKey($certificateData['privateKey']);
+        $this->cache->put($publicKeyCacheKey, $publicKey);
+
+        return $publicKey;
     }
 
     /**

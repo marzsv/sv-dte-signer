@@ -47,17 +47,16 @@ class JwsVerifier implements JwsVerifierInterface
             $key = new Key($publicKey, self::ALGORITHM);
             $decoded = JWT::decode($jwsToken, $key);
 
-            // Firebase JWT returns object, convert to array
-            $encodedPayload = json_encode($decoded);
-            if ($encodedPayload === false) {
+            $encoded = json_encode($decoded);
+            if ($encoded === false) {
                 throw new VerificationException(
                     'Failed to encode JWT payload',
                     ['Payload encode error']
                 );
             }
-            
-            $payload = json_decode($encodedPayload, true);
-            
+
+            $payload = json_decode($encoded, true);
+
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new VerificationException(
                     'Failed to decode JWT payload: ' . json_last_error_msg(),

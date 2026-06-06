@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Marzsv\DteSigner\Builders;
 
+use Marzsv\DteSigner\Cache\NullCache;
 use Marzsv\DteSigner\Config;
 use Marzsv\DteSigner\Certificate\CertificateLoader;
+use Marzsv\DteSigner\Contracts\CacheInterface;
 use Marzsv\DteSigner\Contracts\KeyFormatterInterface;
 use Marzsv\DteSigner\Contracts\RateLimiterInterface;
 use Marzsv\DteSigner\DteSigner;
@@ -29,6 +31,7 @@ class DteSignerFactory
     private LoggerInterface $logger;
     private RateLimiterInterface $rateLimiter;
     private KeyFormatterInterface $keyFormatter;
+    private CacheInterface $cache;
 
     private function __construct(string $certificateDirectory)
     {
@@ -36,6 +39,7 @@ class DteSignerFactory
         $this->logger = new NullLogger();
         $this->rateLimiter = new NullRateLimiter();
         $this->keyFormatter = new CompositeKeyFormatter();
+        $this->cache = new NullCache();
     }
 
     /**
@@ -91,6 +95,17 @@ class DteSignerFactory
     }
 
     /**
+     * Set the cache implementation
+     */
+    public function withCache(CacheInterface $cache): self
+    {
+        $clone = clone $this;
+        $clone->cache = $cache;
+
+        return $clone;
+    }
+
+    /**
      * Build a fully configured DteSigner instance
      */
     public function buildSigner(): DteSigner
@@ -98,9 +113,10 @@ class DteSignerFactory
         return new DteSigner(
             $this->certificateDirectory,
             new RequestValidator(),
-            new CertificateLoader($this->certificateDirectory, null, null, $this->logger, $this->keyFormatter),
+            new CertificateLoader($this->certificateDirectory, null, null, $this->keyFormatter, $this->cache),
             new JwsSigner($this->keyFormatter),
-            $this->logger
+            $this->logger,
+            $this->cache
         );
     }
 
@@ -111,10 +127,11 @@ class DteSignerFactory
     {
         return new DteVerifier(
             $this->certificateDirectory,
-            new CertificateLoader($this->certificateDirectory, null, null, $this->logger, $this->keyFormatter),
+            new CertificateLoader($this->certificateDirectory, null, null, $this->keyFormatter, $this->cache),
             new JwsVerifier(),
             $this->logger,
-            $this->rateLimiter
+            $this->rateLimiter,
+            $this->cache
         );
     }
 }
