@@ -279,11 +279,17 @@ class DteSignerTest extends TestCase
             'dteJson' => ['test' => 'data']
         ];
 
+        $this->mockValidator
+            ->expects($this->once())
+            ->method('validate');
+
         $this->mockLoader
+            ->expects($this->any())
             ->method('loadCertificate')
             ->willReturn(['privateKey' => 'mock-private-key']);
 
         $this->mockJwsSigner
+            ->expects($this->any())
             ->method('sign')
             ->willReturn('signed.jws.token');
 

@@ -23,6 +23,9 @@ class JwsSignerTest extends TestCase
             'private_key_type' => OPENSSL_KEYTYPE_RSA,
         ];
         $resource = openssl_pkey_new($config);
+        if ($resource === false) {
+            throw new \RuntimeException('Failed to generate test RSA key');
+        }
         $privateKey = '';
         openssl_pkey_export($resource, $privateKey);
         $this->testPrivateKey = $privateKey;
