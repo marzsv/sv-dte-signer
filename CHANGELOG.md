@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1] - 2026-06-07
+
+### Changed
+- Upgraded static analysis to PHPStan 2.x level 10 with phpstan-strict-rules
+- Applied strict type annotations and explicit comparisons throughout codebase
+- Enabled strict base64_decode validation for additional security
+- Standardized test assertions to use `self::` notation
+
+### Internal
+- Removed deprecated `ReflectionMethod::setAccessible()` calls (no-op since PHP 8.1)
+- Enhanced PHPStan configuration with strict-rules and phpstan-phpunit plugins
+- Improved OpenSSL result guards with explicit `is_string` checks
+- Optimized composer scripts (test runs with `--no-coverage` by default)
+
+### Backward Compatibility
+- All changes are 100% backward compatible
+- No changes to public API or runtime behavior
+- Purely internal improvements to code quality and static analysis
+
 ## [1.6.0] - 2026-06-06
 
 ### Added
