@@ -28,14 +28,14 @@ class JwsVerifier implements JwsVerifierInterface
     public function verifySignature(string $jwsToken, string $publicKey): array
     {
         try {
-            if (empty($jwsToken)) {
+            if ($jwsToken === '') {
                 throw new VerificationException(
                     'JWS token cannot be empty',
                     ['JWS token is required']
                 );
             }
 
-            if (empty($publicKey)) {
+            if ($publicKey === '') {
                 throw new VerificationException(
                     'Public key cannot be empty',
                     ['Public key is required for verification']
@@ -113,7 +113,7 @@ class JwsVerifier implements JwsVerifierInterface
     public function extractPayload(string $jwsToken): array
     {
         try {
-            if (empty($jwsToken)) {
+            if ($jwsToken === '') {
                 throw new VerificationException(
                     'JWS token cannot be empty',
                     ['JWS token is required']
@@ -153,6 +153,7 @@ class JwsVerifier implements JwsVerifierInterface
                 );
             }
 
+            /** @var array<string, mixed> $payload */
             return $payload;
 
         } catch (\Exception $e) {
@@ -184,7 +185,7 @@ class JwsVerifier implements JwsVerifierInterface
         }
 
         foreach ($parts as $index => $part) {
-            if (empty($part)) {
+            if ($part === '') {
                 $partNames = ['header', 'payload', 'signature'];
                 throw new VerificationException(
                     'Invalid JWT format: empty ' . $partNames[$index],

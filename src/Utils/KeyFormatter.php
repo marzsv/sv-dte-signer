@@ -66,7 +66,7 @@ class KeyFormatter
             if ($resource === false) {
                 $error = openssl_error_string();
                 throw new DteSignerException(
-                    'Cannot decrypt private key with provided password' . ($error ? ': ' . $error : ''),
+                    'Cannot decrypt private key with provided password' . ($error !== false ? ': ' . $error : ''),
                     'COD_814'
                 );
             }
@@ -77,9 +77,13 @@ class KeyFormatter
         if (!openssl_pkey_export($resource, $decryptedPem)) {
             $error = openssl_error_string();
             throw new DteSignerException(
-                'Failed to export decrypted private key' . ($error ? ': ' . $error : ''),
+                'Failed to export decrypted private key' . ($error !== false ? ': ' . $error : ''),
                 'COD_815'
             );
+        }
+
+        if (!is_string($decryptedPem)) {
+            throw new DteSignerException('Exported private key is not a valid string', 'COD_815');
         }
 
         return $decryptedPem;

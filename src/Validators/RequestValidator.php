@@ -39,7 +39,7 @@ class RequestValidator
 
         $errors = array_merge($errors, $this->validateDteJson($request['dteJson'] ?? null));
 
-        if (!empty($errors)) {
+        if ($errors !== []) {
             throw new ValidationException('Request validation failed', $errors);
         }
     }
@@ -55,7 +55,8 @@ class RequestValidator
         $errors = [];
 
         foreach ($this->requiredFields as $field) {
-            if (!array_key_exists($field, $request) || empty($request[$field])) {
+            $value = $request[$field] ?? null;
+            if ($value === null || $value === '' || $value === []) {
                 $errors[] = "Required field '{$field}' is missing or empty";
             }
         }

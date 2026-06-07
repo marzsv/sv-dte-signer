@@ -53,6 +53,7 @@ class CertificateLoader implements CertificateLoaderInterface
 
         $cached = $this->cache->get($cacheKey);
         if (is_array($cached)) {
+            /** @var array<string, mixed> $cached */
             $this->validator->validate($cached, $password);
             return $cached;
         }
@@ -113,7 +114,7 @@ class CertificateLoader implements CertificateLoaderInterface
             $this->cache->put($certificateCacheKey, $certificateData);
         }
 
-        if (empty($certificateData['privateKey']) || !is_string($certificateData['privateKey'])) {
+        if (!is_string($certificateData['privateKey']) || $certificateData['privateKey'] === '') {
             throw CertificateException::invalidCertificate('No private key found in certificate');
         }
 
@@ -140,7 +141,7 @@ class CertificateLoader implements CertificateLoaderInterface
             if ($privateKeyResource === false) {
                 $error = openssl_error_string();
                 throw CertificateException::invalidCertificate(
-                    'Cannot load private key' . ($error ? ': ' . $error : '')
+                    'Cannot load private key' . ($error !== false ? ': ' . $error : '')
                 );
             }
 
@@ -150,17 +151,18 @@ class CertificateLoader implements CertificateLoaderInterface
             if ($publicKeyDetails === false) {
                 $error = openssl_error_string();
                 throw CertificateException::invalidCertificate(
-                    'Cannot get public key details' . ($error ? ': ' . $error : '')
+                    'Cannot get public key details' . ($error !== false ? ': ' . $error : '')
                 );
             }
 
-            if (!isset($publicKeyDetails['key'])) {
+            $key = $publicKeyDetails['key'] ?? null;
+            if (!is_string($key)) {
                 throw CertificateException::invalidCertificate(
                     'Public key not found in key details'
                 );
             }
 
-            return $publicKeyDetails['key'];
+            return $key;
 
         } catch (CertificateException $e) {
             throw $e;

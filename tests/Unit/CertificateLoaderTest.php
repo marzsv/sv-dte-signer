@@ -26,7 +26,7 @@ class CertificateLoaderTest extends TestCase
     {
         // Clean up temp directory
         $files = glob($this->tempDir . '/*');
-        if ($files) {
+        if ($files !== false) {
             foreach ($files as $file) {
                 unlink($file);
             }
@@ -65,7 +65,7 @@ class CertificateLoaderTest extends TestCase
             ]);
 
         $mockValidator = $this->createMock(CertificateValidator::class);
-        $mockValidator->expects($this->once())
+        $mockValidator->expects(self::once())
             ->method('validate');
 
         $loader = new CertificateLoader($this->tempDir, $mockParser, $mockValidator);
@@ -74,8 +74,8 @@ class CertificateLoaderTest extends TestCase
         $result = $loader->loadCertificate($nit, 'password');
 
         // Assert
-        $this->assertEquals('true', $result['activo']);
-        $this->assertEquals('mock-key', $result['privateKey']);
+        self::assertEquals('true', $result['activo']);
+        self::assertEquals('mock-key', $result['privateKey']);
     }
 
     public function testLoadCertificateValidationFails(): void
@@ -94,7 +94,7 @@ class CertificateLoaderTest extends TestCase
             ]);
 
         $mockValidator = $this->createMock(CertificateValidator::class);
-        $mockValidator->expects($this->once())
+        $mockValidator->expects(self::once())
             ->method('validate')
             ->willThrowException(CertificateException::invalidCertificate('Certificate is not active'));
 
@@ -148,11 +148,9 @@ class CertificateLoaderTest extends TestCase
 
     public function testConstructorWithDefaultDependencies(): void
     {
-        // Act
+        // Act & Assert - construction should not throw
+        self::expectNotToPerformAssertions();
         $loader = new CertificateLoader('/some/path');
-
-        // Assert
-        $this->assertInstanceOf(CertificateLoader::class, $loader);
     }
 
     public function testCertificatePathBuildingWithTrailingSlash(): void

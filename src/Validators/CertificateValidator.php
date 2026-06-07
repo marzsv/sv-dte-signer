@@ -55,7 +55,7 @@ class CertificateValidator
      */
     private function validatePrivateKey(array $certificateData): void
     {
-        if (!isset($certificateData['privateKey']) || empty($certificateData['privateKey'])) {
+        if (!isset($certificateData['privateKey']) || $certificateData['privateKey'] === '') {
             throw CertificateException::invalidCertificate('Private key is missing');
         }
     }

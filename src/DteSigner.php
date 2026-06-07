@@ -73,6 +73,8 @@ class DteSigner
                 throw new ValidationException('Invalid request data types', ['Type validation error']);
             }
 
+            /** @var array<string, mixed> $dteJson */
+
             $this->logger->info('DTE signing started', ['nit' => $nit]);
 
             $certificateData = $this->certificateLoader->loadCertificate($nit, $password);
@@ -173,6 +175,7 @@ class DteSigner
             );
         }
 
+        /** @var array<string, mixed> $data */
         return $data;
     }
 

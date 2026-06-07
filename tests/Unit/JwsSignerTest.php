@@ -27,7 +27,9 @@ class JwsSignerTest extends TestCase
             throw new \RuntimeException('Failed to generate test RSA key');
         }
         $privateKey = '';
-        openssl_pkey_export($resource, $privateKey);
+        if (!openssl_pkey_export($resource, $privateKey) || !is_string($privateKey)) {
+            throw new \RuntimeException('Failed to export test RSA key');
+        }
         $this->testPrivateKey = $privateKey;
     }
 
@@ -43,12 +45,11 @@ class JwsSignerTest extends TestCase
         $result = $this->signer->sign($dteJson, $this->testPrivateKey);
 
         // Assert
-        $this->assertIsString($result);
-        $this->assertNotEmpty($result);
+        self::assertNotEmpty($result);
 
         // Verify JWS format (header.payload.signature)
         $parts = explode('.', $result);
-        $this->assertCount(3, $parts);
+        self::assertCount(3, $parts);
     }
 
     public function testSignEmptyPrivateKeyThrowsException(): void
@@ -83,9 +84,8 @@ class JwsSignerTest extends TestCase
         $result = $this->signer->sign($dteJson, $this->testPrivateKey);
 
         // Assert
-        $this->assertIsString($result);
         $parts = explode('.', $result);
-        $this->assertCount(3, $parts);
+        self::assertCount(3, $parts);
     }
 
     public function testSignWithBase64EncodedKey(): void
@@ -100,16 +100,16 @@ class JwsSignerTest extends TestCase
             $this->testPrivateKey
         );
         // The key is already base64, but we need to decode and re-encode as DER
-        $derKey = base64_decode($keyContent);
+        $derKey = base64_decode($keyContent, true);
+        self::assertNotFalse($derKey);
         $base64Key = base64_encode($derKey);
 
         // Act
         $result = $this->signer->sign($dteJson, $base64Key);
 
         // Assert
-        $this->assertIsString($result);
         $parts = explode('.', $result);
-        $this->assertCount(3, $parts);
+        self::assertCount(3, $parts);
     }
 
     public function testSignInvalidBase64KeyThrowsException(): void
@@ -135,11 +135,13 @@ class JwsSignerTest extends TestCase
 
         // Assert
         $parts = explode('.', $result);
-        $header = json_decode(base64_decode(strtr($parts[0], '-_', '+/')), true);
-        $this->assertIsArray($header);
+        $decodedHeader = base64_decode(strtr($parts[0], '-_', '+/'), true);
+        self::assertNotFalse($decodedHeader);
+        $header = json_decode($decodedHeader, true);
+        self::assertIsArray($header);
 
-        $this->assertEquals('RS512', $header['alg']);
-        $this->assertEquals('JWT', $header['typ']);
+        self::assertEquals('RS512', $header['alg']);
+        self::assertEquals('JWT', $header['typ']);
     }
 
     public function testSignProducesValidPayload(): void
@@ -155,9 +157,11 @@ class JwsSignerTest extends TestCase
 
         // Assert
         $parts = explode('.', $result);
-        $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
+        $decodedPayload = base64_decode(strtr($parts[1], '-_', '+/'), true);
+        self::assertNotFalse($decodedPayload);
+        $payload = json_decode($decodedPayload, true);
 
-        $this->assertEquals($dteJson, $payload);
+        self::assertEquals($dteJson, $payload);
     }
 
     public function testSignWithNullPassword(): void
@@ -169,8 +173,7 @@ class JwsSignerTest extends TestCase
         $result = $this->signer->sign($dteJson, $this->testPrivateKey, null);
 
         // Assert
-        $this->assertIsString($result);
-        $this->assertNotEmpty($result);
+        self::assertNotEmpty($result);
     }
 
     public function testSignWithComplexDteJson(): void
@@ -209,13 +212,16 @@ class JwsSignerTest extends TestCase
         $result = $this->signer->sign($dteJson, $this->testPrivateKey);
 
         // Assert
-        $this->assertIsString($result);
         $parts = explode('.', $result);
-        $this->assertCount(3, $parts);
+        self::assertCount(3, $parts);
 
         // Verify payload integrity
-        $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
-        $this->assertIsArray($payload);
-        $this->assertEquals($dteJson['resumen']['totalPagar'], $payload['resumen']['totalPagar']);
+        $decodedPayload = base64_decode(strtr($parts[1], '-_', '+/'), true);
+        self::assertNotFalse($decodedPayload);
+        $payload = json_decode($decodedPayload, true);
+        self::assertIsArray($payload);
+        $resumen = $payload['resumen'] ?? null;
+        self::assertIsArray($resumen);
+        self::assertEquals($dteJson['resumen']['totalPagar'], $resumen['totalPagar']);
     }
 }

@@ -33,14 +33,14 @@ class JwsSigner implements JwsSignerInterface
     public function sign(array $dteJson, string $privateKey, ?string $password = null): string
     {
         try {
-            if (empty($privateKey)) {
+            if ($privateKey === '') {
                 throw new DteSignerException(
                     'Private key cannot be empty',
                     'COD_815'
                 );
             }
 
-            if (empty($dteJson)) {
+            if ($dteJson === []) {
                 throw new DteSignerException(
                     'DTE JSON cannot be empty',
                     'COD_816'

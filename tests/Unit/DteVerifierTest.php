@@ -9,12 +9,13 @@ use Marzsv\DteSigner\DteVerifier;
 use Marzsv\DteSigner\Exceptions\CertificateException;
 use Marzsv\DteSigner\Exceptions\VerificationException;
 use Marzsv\DteSigner\Signing\JwsVerifier;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class DteVerifierTest extends TestCase
 {
-    private CertificateLoader $certificateLoader;
-    private JwsVerifier $jwsVerifier;
+    private CertificateLoader&MockObject $certificateLoader;
+    private JwsVerifier&MockObject $jwsVerifier;
     private DteVerifier $verifier;
 
     protected function setUp(): void
@@ -37,13 +38,13 @@ class DteVerifierTest extends TestCase
         $expectedPayload = ['dte' => 'test'];
 
         $this->certificateLoader
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('getPublicKey')
             ->with($nit)
             ->willReturn($publicKey);
 
         $this->jwsVerifier
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('verifySignature')
             ->with($jwsToken, $publicKey)
             ->willReturn([
@@ -55,9 +56,9 @@ class DteVerifierTest extends TestCase
         $response = $this->verifier->verify($jwsToken, $nit);
 
         // Assert
-        $this->assertTrue($response['success']);
-        $this->assertEquals('DTE signature verified successfully', $response['message']);
-        $this->assertEquals($expectedPayload, $response['data']);
+        self::assertTrue($response['success']);
+        self::assertEquals('DTE signature verified successfully', $response['message']);
+        self::assertEquals($expectedPayload, $response['data']);
     }
 
     public function testVerifyInvalidSignature(): void
@@ -68,13 +69,13 @@ class DteVerifierTest extends TestCase
         $publicKey = '-----BEGIN PUBLIC KEY-----...-----END PUBLIC KEY-----';
 
         $this->certificateLoader
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('getPublicKey')
             ->with($nit)
             ->willReturn($publicKey);
 
         $this->jwsVerifier
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('verifySignature')
             ->with($jwsToken, $publicKey)
             ->willReturn([
@@ -87,11 +88,11 @@ class DteVerifierTest extends TestCase
         $response = $this->verifier->verify($jwsToken, $nit);
 
         // Assert
-        $this->assertFalse($response['success']);
+        self::assertFalse($response['success']);
         $message = $response['message'];
-        $this->assertIsString($message);
-        $this->assertStringContainsString('Invalid JWS signature', $message);
-        $this->assertEquals('COD_820', $response['errorCode']);
+        self::assertIsString($message);
+        self::assertStringContainsString('Invalid JWS signature', $message);
+        self::assertEquals('COD_820', $response['errorCode']);
     }
 
     public function testVerifyEmptyJwsToken(): void
@@ -104,11 +105,11 @@ class DteVerifierTest extends TestCase
         $response = $this->verifier->verify($jwsToken, $nit);
 
         // Assert
-        $this->assertFalse($response['success']);
+        self::assertFalse($response['success']);
         $message = $response['message'];
-        $this->assertIsString($message);
-        $this->assertStringContainsString('JWS token cannot be empty', $message);
-        $this->assertEquals('COD_820', $response['errorCode']);
+        self::assertIsString($message);
+        self::assertStringContainsString('JWS token cannot be empty', $message);
+        self::assertEquals('COD_820', $response['errorCode']);
     }
 
     public function testVerifyInvalidNit(): void
@@ -121,11 +122,11 @@ class DteVerifierTest extends TestCase
         $response = $this->verifier->verify($jwsToken, $invalidNit);
 
         // Assert
-        $this->assertFalse($response['success']);
+        self::assertFalse($response['success']);
         $message = $response['message'];
-        $this->assertIsString($message);
-        $this->assertStringContainsString('Invalid NIT format', $message);
-        $this->assertEquals('COD_820', $response['errorCode']);
+        self::assertIsString($message);
+        self::assertStringContainsString('Invalid NIT format', $message);
+        self::assertEquals('COD_820', $response['errorCode']);
     }
 
     public function testVerifyCertificateNotFound(): void
@@ -135,7 +136,7 @@ class DteVerifierTest extends TestCase
         $nit = '12345678901234';
 
         $this->certificateLoader
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('getPublicKey')
             ->with($nit)
             ->willThrowException(CertificateException::certificateNotFound($nit));
@@ -144,8 +145,8 @@ class DteVerifierTest extends TestCase
         $response = $this->verifier->verify($jwsToken, $nit);
 
         // Assert
-        $this->assertFalse($response['success']);
-        $this->assertEquals('COD_812', $response['errorCode']);
+        self::assertFalse($response['success']);
+        self::assertEquals('COD_812', $response['errorCode']);
     }
 
     public function testExtractPayloadSuccessful(): void
@@ -155,7 +156,7 @@ class DteVerifierTest extends TestCase
         $expectedPayload = ['dte' => 'test'];
 
         $this->jwsVerifier
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('extractPayload')
             ->with($jwsToken)
             ->willReturn($expectedPayload);
@@ -164,11 +165,11 @@ class DteVerifierTest extends TestCase
         $response = $this->verifier->extractPayload($jwsToken);
 
         // Assert
-        $this->assertTrue($response['success']);
+        self::assertTrue($response['success']);
         $message = $response['message'];
-        $this->assertIsString($message);
-        $this->assertStringContainsString('signature not verified', $message);
-        $this->assertEquals($expectedPayload, $response['data']);
+        self::assertIsString($message);
+        self::assertStringContainsString('signature not verified', $message);
+        self::assertEquals($expectedPayload, $response['data']);
     }
 
     public function testExtractPayloadEmptyToken(): void
@@ -180,11 +181,11 @@ class DteVerifierTest extends TestCase
         $response = $this->verifier->extractPayload($jwsToken);
 
         // Assert
-        $this->assertFalse($response['success']);
+        self::assertFalse($response['success']);
         $message = $response['message'];
-        $this->assertIsString($message);
-        $this->assertStringContainsString('JWS token cannot be empty', $message);
-        $this->assertEquals('COD_820', $response['errorCode']);
+        self::assertIsString($message);
+        self::assertStringContainsString('JWS token cannot be empty', $message);
+        self::assertEquals('COD_820', $response['errorCode']);
     }
 
     public function testExtractPayloadJwsVerifierException(): void
@@ -193,7 +194,7 @@ class DteVerifierTest extends TestCase
         $jwsToken = 'invalid.jwt.token';
 
         $this->jwsVerifier
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('extractPayload')
             ->with($jwsToken)
             ->willThrowException(new VerificationException(
@@ -205,11 +206,11 @@ class DteVerifierTest extends TestCase
         $response = $this->verifier->extractPayload($jwsToken);
 
         // Assert
-        $this->assertFalse($response['success']);
+        self::assertFalse($response['success']);
         $message = $response['message'];
-        $this->assertIsString($message);
-        $this->assertStringContainsString('Invalid JWT format', $message);
-        $this->assertEquals('COD_820', $response['errorCode']);
+        self::assertIsString($message);
+        self::assertStringContainsString('Invalid JWT format', $message);
+        self::assertEquals('COD_820', $response['errorCode']);
     }
 
     public function testVerifyUnexpectedException(): void
@@ -219,7 +220,7 @@ class DteVerifierTest extends TestCase
         $nit = '12345678901234';
 
         $this->certificateLoader
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('getPublicKey')
             ->with($nit)
             ->willThrowException(new \RuntimeException('Unexpected error'));
@@ -228,11 +229,11 @@ class DteVerifierTest extends TestCase
         $response = $this->verifier->verify($jwsToken, $nit);
 
         // Assert
-        $this->assertFalse($response['success']);
+        self::assertFalse($response['success']);
         $message = $response['message'];
-        $this->assertIsString($message);
-        $this->assertStringContainsString('Unexpected verification error', $message);
-        $this->assertEquals('COD_500', $response['errorCode']);
+        self::assertIsString($message);
+        self::assertStringContainsString('Unexpected verification error', $message);
+        self::assertEquals('COD_500', $response['errorCode']);
     }
 
     public function testExtractPayloadUnexpectedException(): void
@@ -241,7 +242,7 @@ class DteVerifierTest extends TestCase
         $jwsToken = 'eyJhbGciOiJSUzUxMiJ9.eyJkdGUiOiJ0ZXN0In0.signature';
 
         $this->jwsVerifier
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('extractPayload')
             ->with($jwsToken)
             ->willThrowException(new \RuntimeException('Unexpected error'));
@@ -250,10 +251,10 @@ class DteVerifierTest extends TestCase
         $response = $this->verifier->extractPayload($jwsToken);
 
         // Assert
-        $this->assertFalse($response['success']);
+        self::assertFalse($response['success']);
         $message = $response['message'];
-        $this->assertIsString($message);
-        $this->assertStringContainsString('Unexpected extraction error', $message);
-        $this->assertEquals('COD_500', $response['errorCode']);
+        self::assertIsString($message);
+        self::assertStringContainsString('Unexpected extraction error', $message);
+        self::assertEquals('COD_500', $response['errorCode']);
     }
 }

@@ -24,30 +24,32 @@ class KeyFormatterTest extends TestCase
             throw new \RuntimeException('Failed to generate test RSA key');
         }
         $pemKey = '';
-        openssl_pkey_export($resource, $pemKey);
+        if (!openssl_pkey_export($resource, $pemKey) || !is_string($pemKey)) {
+            throw new \RuntimeException('Failed to export test RSA key');
+        }
         $this->testPemKey = $pemKey;
     }
 
     public function testIsPemFormatWithValidPem(): void
     {
-        $this->assertTrue(KeyFormatter::isPemFormat($this->testPemKey));
+        self::assertTrue(KeyFormatter::isPemFormat($this->testPemKey));
     }
 
     public function testIsPemFormatWithBase64String(): void
     {
         $base64Key = base64_encode('some binary data');
-        $this->assertFalse(KeyFormatter::isPemFormat($base64Key));
+        self::assertFalse(KeyFormatter::isPemFormat($base64Key));
     }
 
     public function testIsPemFormatWithRandomString(): void
     {
-        $this->assertFalse(KeyFormatter::isPemFormat('random string'));
+        self::assertFalse(KeyFormatter::isPemFormat('random string'));
     }
 
     public function testToPemWithAlreadyPemKey(): void
     {
         $result = KeyFormatter::toPem($this->testPemKey);
-        $this->assertEquals($this->testPemKey, $result);
+        self::assertEquals($this->testPemKey, $result);
     }
 
     public function testToPemWithBase64DerKey(): void
@@ -62,14 +64,15 @@ class KeyFormatterTest extends TestCase
         }
 
         // Decode to DER format
-        $derKey = base64_decode($base64Content);
+        $derKey = base64_decode($base64Content, true);
+        self::assertNotFalse($derKey);
         // Re-encode to base64 (simulating MH format)
         $base64DerKey = base64_encode($derKey);
 
         $result = KeyFormatter::toPem($base64DerKey);
 
-        $this->assertStringContainsString('-----BEGIN PRIVATE KEY-----', $result);
-        $this->assertStringContainsString('-----END PRIVATE KEY-----', $result);
+        self::assertStringContainsString('-----BEGIN PRIVATE KEY-----', $result);
+        self::assertStringContainsString('-----END PRIVATE KEY-----', $result);
     }
 
     public function testToPemWithInvalidBase64ThrowsException(): void
@@ -85,8 +88,8 @@ class KeyFormatterTest extends TestCase
     {
         $result = KeyFormatter::toPemDecrypted($this->testPemKey, null);
 
-        $this->assertStringContainsString('-----BEGIN', $result);
-        $this->assertStringContainsString('-----END', $result);
+        self::assertStringContainsString('-----BEGIN', $result);
+        self::assertStringContainsString('-----END', $result);
     }
 
     public function testToPemDecryptedWithPasswordOnUnencryptedKey(): void
@@ -95,8 +98,8 @@ class KeyFormatterTest extends TestCase
         // (OpenSSL will just use the key without decryption)
         $result = KeyFormatter::toPemDecrypted($this->testPemKey, 'unused_password');
 
-        $this->assertStringContainsString('-----BEGIN', $result);
-        $this->assertStringContainsString('-----END', $result);
+        self::assertStringContainsString('-----BEGIN', $result);
+        self::assertStringContainsString('-----END', $result);
     }
 
     public function testToPemDecryptedWithInvalidKeyThrowsException(): void

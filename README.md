@@ -501,7 +501,7 @@ composer check
 - **Runtime**: PHP 8.1+, OpenSSL, libxml
 - **Library**: firebase/php-jwt v6.11+ for JWS implementation
 - **Compatible**: Tested with PHP 8.4.11
-- **Development**: PHPUnit 10.5+, PHPStan 1.10+ for quality assurance
+- **Development**: PHPUnit 10.5+, PHPStan 2 (level 10) + strict-rules for quality assurance
 
 ## Development
 

@@ -31,7 +31,7 @@ class CertificateParser
                 $errors = libxml_get_errors();
                 libxml_clear_errors();
                 $errorMessage = 'Invalid XML format';
-                if (!empty($errors)) {
+                if ($errors !== []) {
                     $errorMessage .= ': ' . $errors[0]->message;
                 }
                 throw CertificateException::invalidCertificate(trim($errorMessage));
@@ -67,15 +67,17 @@ class CertificateParser
         
         // Extract verificado (verified status) 
         $verificado = $this->extractValue($document, 'verificado');
-        $verificadoBool = !empty($verificado) && $verificado !== 'false' && $verificado !== '0';
+        $verificadoBool = $verificado !== null && $verificado !== '' && $verificado !== 'false' && $verificado !== '0';
         
         // Extract private key from MH structure: <privateKey><encodied>...</encodied></privateKey>
         $privateKeyElements = $xpath->query('//privateKey/encodied');
         $privateKey = null;
-        if ($privateKeyElements && $privateKeyElements->length > 0) {
-            $privateKey = $privateKeyElements->item(0)->nodeValue;
-            // Clean the private key (remove newlines and spaces)
-            $privateKey = preg_replace('/\s+/', '', $privateKey);
+        if ($privateKeyElements !== false && $privateKeyElements->length > 0) {
+            $nodeValue = $privateKeyElements->item(0)?->nodeValue;
+            if ($nodeValue !== null) {
+                // Clean the private key (remove newlines and spaces)
+                $privateKey = preg_replace('/\s+/', '', $nodeValue);
+            }
         }
 
         // For MH certificates, we don't store password hashes in the XML
@@ -86,7 +88,7 @@ class CertificateParser
         $notBefore = $this->extractValue($document, 'notBefore');
         $notAfter = $this->extractValue($document, 'notAfter');
 
-        if (!$privateKey) {
+        if ($privateKey === null || $privateKey === '') {
             throw CertificateException::invalidCertificate('Private key not found in MH certificate');
         }
 
@@ -122,7 +124,7 @@ class CertificateParser
         $xpathObj = new DOMXPath($document);
         $elements = $xpathObj->query($xpath);
         
-        if (!$elements || $elements->length === 0) {
+        if ($elements === false || $elements->length === 0) {
             return null;
         }
 

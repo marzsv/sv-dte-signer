@@ -26,10 +26,10 @@ class CertificateParserTest extends TestCase
         $result = $this->parser->parse($xml);
 
         // Assert
-        $this->assertEquals('true', $result['activo']);
-        $this->assertEquals('true', $result['verificado']);
-        $this->assertNotEmpty($result['privateKey']);
-        $this->assertNotEmpty($result['passwordHash']);
+        self::assertEquals('true', $result['activo']);
+        self::assertEquals('true', $result['verificado']);
+        self::assertNotEmpty($result['privateKey']);
+        self::assertNotEmpty($result['passwordHash']);
     }
 
     public function testParseInvalidXmlThrowsException(): void
@@ -96,7 +96,7 @@ XML;
         $result = $this->parser->parse($xml);
 
         // Assert
-        $this->assertEquals('false', $result['activo']);
+        self::assertEquals('false', $result['activo']);
     }
 
     public function testParseActivoCero(): void
@@ -108,7 +108,7 @@ XML;
         $result = $this->parser->parse($xml);
 
         // Assert
-        $this->assertEquals('false', $result['activo']);
+        self::assertEquals('false', $result['activo']);
     }
 
     public function testParseActivoUno(): void
@@ -120,7 +120,7 @@ XML;
         $result = $this->parser->parse($xml);
 
         // Assert
-        $this->assertEquals('true', $result['activo']);
+        self::assertEquals('true', $result['activo']);
     }
 
     public function testParseEmptyVerificado(): void
@@ -143,7 +143,7 @@ XML;
         $result = $this->parser->parse($xml);
 
         // Assert - empty verificado should still return 'false'
-        $this->assertEquals('false', $result['verificado']);
+        self::assertEquals('false', $result['verificado']);
     }
 
     public function testParseVerificadoFalse(): void
@@ -155,7 +155,7 @@ XML;
         $result = $this->parser->parse($xml);
 
         // Assert
-        $this->assertEquals('false', $result['verificado']);
+        self::assertEquals('false', $result['verificado']);
     }
 
     public function testParseCleanPrivateKey(): void
@@ -181,7 +181,7 @@ XML;
         $result = $this->parser->parse($xml);
 
         // Assert - whitespace should be removed
-        $this->assertEquals('MIIEvgIBADANBgkqhkiG9w0BAQEFAASC', $result['privateKey']);
+        self::assertEquals('MIIEvgIBADANBgkqhkiG9w0BAQEFAASC', $result['privateKey']);
     }
 
     public function testPasswordHashIsGenerated(): void
@@ -193,10 +193,10 @@ XML;
         $result = $this->parser->parse($xml);
 
         // Assert - hash should be 64 chars (SHA256)
-        $this->assertNotEmpty($result['passwordHash']);
+        self::assertNotEmpty($result['passwordHash']);
         $hash = $result['passwordHash'];
-        $this->assertIsString($hash);
-        $this->assertEquals(64, strlen($hash));
+        self::assertIsString($hash);
+        self::assertEquals(64, strlen($hash));
     }
 
     public function testPasswordHashIsConsistent(): void
@@ -209,7 +209,7 @@ XML;
         $result2 = $this->parser->parse($xml);
 
         // Assert - same XML should produce same hash
-        $this->assertEquals($result1['passwordHash'], $result2['passwordHash']);
+        self::assertEquals($result1['passwordHash'], $result2['passwordHash']);
     }
 
     private function createValidMhCertificateXml(): string

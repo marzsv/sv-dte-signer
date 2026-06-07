@@ -11,14 +11,15 @@ use Marzsv\DteSigner\Exceptions\DteSignerException;
 use Marzsv\DteSigner\Exceptions\ValidationException;
 use Marzsv\DteSigner\Signing\JwsSigner;
 use Marzsv\DteSigner\Validators\RequestValidator;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class DteSignerTest extends TestCase
 {
     private DteSigner $signer;
-    private RequestValidator $mockValidator;
-    private CertificateLoader $mockLoader;
-    private JwsSigner $mockJwsSigner;
+    private RequestValidator&MockObject $mockValidator;
+    private CertificateLoader&MockObject $mockLoader;
+    private JwsSigner&MockObject $mockJwsSigner;
 
     protected function setUp(): void
     {
@@ -44,18 +45,18 @@ class DteSignerTest extends TestCase
         ];
 
         $this->mockValidator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('validate')
             ->with($request);
 
         $this->mockLoader
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('loadCertificate')
             ->with('12345678901234', 'testpassword')
             ->willReturn(['privateKey' => 'mock-private-key']);
 
         $this->mockJwsSigner
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('sign')
             ->with(['test' => 'data'], 'mock-private-key', 'testpassword')
             ->willReturn('signed.jws.token');
@@ -64,9 +65,9 @@ class DteSignerTest extends TestCase
         $response = $this->signer->sign($request);
 
         // Assert
-        $this->assertTrue($response['success']);
-        $this->assertEquals('signed.jws.token', $response['data']);
-        $this->assertEquals('DTE signed successfully', $response['message']);
+        self::assertTrue($response['success']);
+        self::assertEquals('signed.jws.token', $response['data']);
+        self::assertEquals('DTE signed successfully', $response['message']);
     }
 
     public function testSignValidationError(): void
@@ -79,7 +80,7 @@ class DteSignerTest extends TestCase
         ];
 
         $this->mockValidator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('validate')
             ->willThrowException(new ValidationException('Validation failed', ['NIT must be 14 digits']));
 
@@ -87,11 +88,11 @@ class DteSignerTest extends TestCase
         $response = $this->signer->sign($request);
 
         // Assert
-        $this->assertFalse($response['success']);
-        $this->assertEquals('COD_803', $response['errorCode']);
+        self::assertFalse($response['success']);
+        self::assertEquals('COD_803', $response['errorCode']);
         $errors = $response['errors'];
-        $this->assertIsArray($errors);
-        $this->assertContains('NIT must be 14 digits', $errors);
+        self::assertIsArray($errors);
+        self::assertContains('NIT must be 14 digits', $errors);
     }
 
     public function testSignCertificateNotFound(): void
@@ -104,11 +105,11 @@ class DteSignerTest extends TestCase
         ];
 
         $this->mockValidator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('validate');
 
         $this->mockLoader
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('loadCertificate')
             ->willThrowException(CertificateException::certificateNotFound('12345678901234'));
 
@@ -116,8 +117,8 @@ class DteSignerTest extends TestCase
         $response = $this->signer->sign($request);
 
         // Assert
-        $this->assertFalse($response['success']);
-        $this->assertEquals('COD_812', $response['errorCode']);
+        self::assertFalse($response['success']);
+        self::assertEquals('COD_812', $response['errorCode']);
     }
 
     public function testSignJwsSigningError(): void
@@ -130,16 +131,16 @@ class DteSignerTest extends TestCase
         ];
 
         $this->mockValidator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('validate');
 
         $this->mockLoader
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('loadCertificate')
             ->willReturn(['privateKey' => 'mock-private-key']);
 
         $this->mockJwsSigner
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('sign')
             ->willThrowException(new DteSignerException('Signing failed', 'COD_815'));
 
@@ -147,8 +148,8 @@ class DteSignerTest extends TestCase
         $response = $this->signer->sign($request);
 
         // Assert
-        $this->assertFalse($response['success']);
-        $this->assertEquals('COD_815', $response['errorCode']);
+        self::assertFalse($response['success']);
+        self::assertEquals('COD_815', $response['errorCode']);
     }
 
     public function testSignUnexpectedException(): void
@@ -161,7 +162,7 @@ class DteSignerTest extends TestCase
         ];
 
         $this->mockValidator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('validate')
             ->willThrowException(new \RuntimeException('Unexpected error'));
 
@@ -169,11 +170,11 @@ class DteSignerTest extends TestCase
         $response = $this->signer->sign($request);
 
         // Assert
-        $this->assertFalse($response['success']);
-        $this->assertEquals('COD_500', $response['errorCode']);
+        self::assertFalse($response['success']);
+        self::assertEquals('COD_500', $response['errorCode']);
         $message = $response['message'];
-        $this->assertIsString($message);
-        $this->assertStringContainsString('Unexpected error', $message);
+        self::assertIsString($message);
+        self::assertStringContainsString('Unexpected error', $message);
     }
 
     public function testSignFromJsonFile(): void
@@ -188,16 +189,16 @@ class DteSignerTest extends TestCase
         file_put_contents($tempFile, json_encode($requestData));
 
         $this->mockValidator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('validate');
 
         $this->mockLoader
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('loadCertificate')
             ->willReturn(['privateKey' => 'mock-private-key']);
 
         $this->mockJwsSigner
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('sign')
             ->willReturn('signed.jws.token');
 
@@ -205,8 +206,8 @@ class DteSignerTest extends TestCase
         $response = $this->signer->sign($tempFile);
 
         // Assert
-        $this->assertTrue($response['success']);
-        $this->assertEquals('signed.jws.token', $response['data']);
+        self::assertTrue($response['success']);
+        self::assertEquals('signed.jws.token', $response['data']);
 
         // Cleanup
         unlink($tempFile);
@@ -218,12 +219,13 @@ class DteSignerTest extends TestCase
         $response = $this->signer->sign('/path/to/nonexistent/file.json');
 
         // Assert
-        $this->assertFalse($response['success']);
-        $this->assertEquals('COD_803', $response['errorCode']);
+        self::assertFalse($response['success']);
+        self::assertEquals('COD_803', $response['errorCode']);
         $errors = $response['errors'];
-        $this->assertIsArray($errors);
-        $this->assertCount(1, $errors);
-        $this->assertStringContainsString('File does not exist', $errors[0]);
+        self::assertIsArray($errors);
+        self::assertCount(1, $errors);
+        self::assertIsString($errors[0]);
+        self::assertStringContainsString('File does not exist', $errors[0]);
     }
 
     public function testSignFromInvalidJsonFile(): void
@@ -236,8 +238,8 @@ class DteSignerTest extends TestCase
         $response = $this->signer->sign($tempFile);
 
         // Assert
-        $this->assertFalse($response['success']);
-        $this->assertEquals('COD_803', $response['errorCode']);
+        self::assertFalse($response['success']);
+        self::assertEquals('COD_803', $response['errorCode']);
 
         // Cleanup
         unlink($tempFile);
@@ -253,20 +255,20 @@ class DteSignerTest extends TestCase
         ];
 
         $this->mockValidator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('validate')
-            ->with($this->callback(function (array $data): bool {
+            ->with(self::callback(function (array $data): bool {
                 return isset($data['privateKeyPassword']) && !isset($data['passwordPri']);
             }));
 
         $this->mockLoader
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('loadCertificate')
             ->with('12345678901234', 'testpassword')
             ->willReturn(['privateKey' => 'mock-private-key']);
 
         $this->mockJwsSigner
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('sign')
             ->willReturn('signed.jws.token');
 
@@ -274,8 +276,8 @@ class DteSignerTest extends TestCase
         $response = @$this->signer->sign($request); // @ suppresses the deprecation notice for test
 
         // Assert
-        $this->assertTrue($response['success']);
-        $this->assertEquals('signed.jws.token', $response['data']);
+        self::assertTrue($response['success']);
+        self::assertEquals('signed.jws.token', $response['data']);
     }
 
     public function testSignWithDeprecatedPasswordPriTriggersDeprecation(): void
@@ -287,24 +289,24 @@ class DteSignerTest extends TestCase
         ];
 
         $this->mockValidator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('validate');
 
         $this->mockLoader
-            ->expects($this->any())
+            ->expects(self::any())
             ->method('loadCertificate')
             ->willReturn(['privateKey' => 'mock-private-key']);
 
         $this->mockJwsSigner
-            ->expects($this->any())
+            ->expects(self::any())
             ->method('sign')
             ->willReturn('signed.jws.token');
 
         // Assert deprecation is triggered
         set_error_handler(function (int $errno, string $errstr): bool {
-            $this->assertEquals(E_USER_DEPRECATED, $errno);
-            $this->assertStringContainsString('passwordPri', $errstr);
-            $this->assertStringContainsString('privateKeyPassword', $errstr);
+            self::assertEquals(E_USER_DEPRECATED, $errno);
+            self::assertStringContainsString('passwordPri', $errstr);
+            self::assertStringContainsString('privateKeyPassword', $errstr);
             return true;
         });
 
@@ -324,17 +326,17 @@ class DteSignerTest extends TestCase
         ];
 
         $this->mockValidator
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('validate');
 
         $this->mockLoader
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('loadCertificate')
             ->with('12345678901234', 'newpassword')
             ->willReturn(['privateKey' => 'mock-private-key']);
 
         $this->mockJwsSigner
-            ->expects($this->once())
+            ->expects(self::once())
             ->method('sign')
             ->willReturn('signed.jws.token');
 
@@ -342,24 +344,20 @@ class DteSignerTest extends TestCase
         $response = $this->signer->sign($request);
 
         // Assert
-        $this->assertTrue($response['success']);
+        self::assertTrue($response['success']);
     }
 
     public function testConstructorWithDefaultDependencies(): void
     {
-        // Act - should not throw
+        // Act & Assert - construction should not throw
+        self::expectNotToPerformAssertions();
         $signer = new DteSigner();
-
-        // Assert
-        $this->assertInstanceOf(DteSigner::class, $signer);
     }
 
     public function testConstructorWithCustomDirectory(): void
     {
-        // Act - should not throw
+        // Act & Assert - construction should not throw
+        self::expectNotToPerformAssertions();
         $signer = new DteSigner('/custom/certificates/path');
-
-        // Assert
-        $this->assertInstanceOf(DteSigner::class, $signer);
     }
 }

@@ -33,7 +33,7 @@ class PemKeyFormatter implements KeyFormatterInterface
         if ($privateKeyResource === false) {
             $error = openssl_error_string();
             throw new DteSignerException(
-                'Cannot load private key' . ($error ? ': ' . $error : ''),
+                'Cannot load private key' . ($error !== false ? ': ' . $error : ''),
                 'COD_814'
             );
         }
@@ -42,9 +42,13 @@ class PemKeyFormatter implements KeyFormatterInterface
         if (!openssl_pkey_export($privateKeyResource, $decryptedKey)) {
             $error = openssl_error_string();
             throw new DteSignerException(
-                'Cannot export private key' . ($error ? ': ' . $error : ''),
+                'Cannot export private key' . ($error !== false ? ': ' . $error : ''),
                 'COD_815'
             );
+        }
+
+        if (!is_string($decryptedKey)) {
+            throw new DteSignerException('Exported private key is not a valid string', 'COD_815');
         }
 
         return $decryptedKey;

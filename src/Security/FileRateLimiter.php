@@ -100,8 +100,12 @@ class FileRateLimiter implements RateLimiterInterface
         }
 
         $data = json_decode($content, true);
+        if (!is_array($data)) {
+            return [];
+        }
 
-        return is_array($data) ? $data : [];
+        /** @var array<string, array<int>> $data */
+        return $data;
     }
 
     /**
@@ -112,7 +116,7 @@ class FileRateLimiter implements RateLimiterInterface
     private function saveAttempts(array $attempts): void
     {
         $dir = dirname($this->filePath);
-        if ($dir && !is_dir($dir)) {
+        if ($dir !== '' && !is_dir($dir)) {
             @mkdir($dir, 0700, true);
         }
 

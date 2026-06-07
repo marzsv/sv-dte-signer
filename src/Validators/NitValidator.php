@@ -39,7 +39,7 @@ class NitValidator
             $errors[] = 'NIT must be exactly 14 characters long';
         }
 
-        if (!preg_match(self::NIT_PATTERN, $nit)) {
+        if (preg_match(self::NIT_PATTERN, $nit) !== 1) {
             $errors[] = 'NIT must contain only digits';
         }
 

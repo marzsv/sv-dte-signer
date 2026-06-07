@@ -61,7 +61,7 @@ class DteVerifier
     public function verify(string $jwsToken, string $nit): array
     {
         try {
-            if (empty($jwsToken)) {
+            if ($jwsToken === '') {
                 throw new VerificationException(
                     'JWS token cannot be empty',
                     ['JWS token is required']
@@ -76,7 +76,7 @@ class DteVerifier
             }
 
             $nitErrors = NitValidator::validate($nit);
-            if (!empty($nitErrors)) {
+            if ($nitErrors !== []) {
                 throw new VerificationException(
                     'Invalid NIT format',
                     $nitErrors
@@ -92,7 +92,7 @@ class DteVerifier
 
             $verificationResult = $this->jwsVerifier->verifySignature($jwsToken, $publicKey);
 
-            if (!$verificationResult['valid']) {
+            if ($verificationResult['valid'] !== true) {
                 throw new VerificationException(
                     'Invalid JWS signature',
                     ['Signature verification failed']
@@ -107,6 +107,8 @@ class DteVerifier
                 );
             }
 
+            /** @var array<string, mixed> $payload */
+
             $this->rateLimiter->reset($nit);
 
             $this->logger->info('DTE verification successful', ['nit' => $nit]);
@@ -117,7 +119,7 @@ class DteVerifier
             );
 
         } catch (DteSignerException $e) {
-            if (!empty($nit) && NitValidator::isValid($nit)) {
+            if ($nit !== '' && NitValidator::isValid($nit)) {
                 $this->rateLimiter->recordAttempt($nit);
                 $this->logger->warning('DTE verification failed', [
                     'nit' => $nit,
@@ -127,7 +129,7 @@ class DteVerifier
 
             return ResponseBuilder::error($e);
         } catch (\Exception $e) {
-            if (!empty($nit) && NitValidator::isValid($nit)) {
+            if ($nit !== '' && NitValidator::isValid($nit)) {
                 $this->rateLimiter->recordAttempt($nit);
                 $this->logger->warning('DTE verification failed', [
                     'nit' => $nit,
@@ -154,7 +156,7 @@ class DteVerifier
     public function extractPayload(string $jwsToken): array
     {
         try {
-            if (empty($jwsToken)) {
+            if ($jwsToken === '') {
                 throw new VerificationException(
                     'JWS token cannot be empty',
                     ['JWS token is required']

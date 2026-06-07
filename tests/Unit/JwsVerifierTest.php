@@ -38,7 +38,7 @@ class JwsVerifierTest extends TestCase
         $result = $this->verifier->extractPayload($jwsToken);
 
         // Assert
-        $this->assertEquals($expectedPayload, $result);
+        self::assertEquals($expectedPayload, $result);
     }
 
     public function testExtractPayloadWithPadding(): void
@@ -59,7 +59,7 @@ class JwsVerifierTest extends TestCase
         $result = $this->verifier->extractPayload($jwsToken);
 
         // Assert
-        $this->assertEquals($expectedPayload, $result);
+        self::assertEquals($expectedPayload, $result);
     }
 
     public function testExtractPayloadEmptyToken(): void
@@ -198,11 +198,10 @@ class JwsVerifierTest extends TestCase
         // Act
         $reflection = new \ReflectionClass($this->verifier);
         $method = $reflection->getMethod('addBase64Padding');
-        $method->setAccessible(true);
         $result = $method->invoke($this->verifier, $base64String);
 
         // Assert
-        $this->assertEquals($base64String, $result);
+        self::assertEquals($base64String, $result);
     }
 
     public function testAddBase64PaddingNeeded(): void
@@ -213,11 +212,10 @@ class JwsVerifierTest extends TestCase
         // Act
         $reflection = new \ReflectionClass($this->verifier);
         $method = $reflection->getMethod('addBase64Padding');
-        $method->setAccessible(true);
         $result = $method->invoke($this->verifier, $base64String);
 
         // Assert
-        $this->assertEquals('dGVzdA==', $result);
+        self::assertEquals('dGVzdA==', $result);
     }
 
     /**

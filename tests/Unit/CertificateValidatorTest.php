@@ -28,8 +28,8 @@ class CertificateValidatorTest extends TestCase
         ];
 
         // Act & Assert - should not throw
+        self::expectNotToPerformAssertions();
         $this->validator->validate($certificateData, 'password');
-        $this->assertTrue(true); // If we get here, validation passed
     }
 
     public function testValidateInactiveCertificateThrowsException(): void
@@ -135,7 +135,7 @@ class CertificateValidatorTest extends TestCase
 
         // Act & Assert - should NOT throw
         $this->validator->validate($certificateData, 'password');
-        $this->assertTrue(true);
+        self::expectNotToPerformAssertions();
     }
 
     public function testValidateVerificadoFalseString(): void
@@ -150,7 +150,7 @@ class CertificateValidatorTest extends TestCase
 
         // Act & Assert - should NOT throw because key exists
         $this->validator->validate($certificateData, 'password');
-        $this->assertTrue(true);
+        self::expectNotToPerformAssertions();
     }
 
     public function testValidateVerificadoEmptyString(): void
@@ -165,7 +165,7 @@ class CertificateValidatorTest extends TestCase
 
         // Act & Assert - should NOT throw because key exists
         $this->validator->validate($certificateData, 'password');
-        $this->assertTrue(true);
+        self::expectNotToPerformAssertions();
     }
 
     public function testValidateActivoNotExactlyTrue(): void
@@ -200,6 +200,6 @@ class CertificateValidatorTest extends TestCase
         // The real validation happens during OpenSSL decryption
         $this->validator->validate($certificateData, 'any-password');
         $this->validator->validate($certificateData, 'different-password');
-        $this->assertTrue(true);
+        self::expectNotToPerformAssertions();
     }
 }

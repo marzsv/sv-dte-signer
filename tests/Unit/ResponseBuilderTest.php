@@ -19,9 +19,9 @@ class ResponseBuilderTest extends TestCase
         $response = ResponseBuilder::success($signedJws);
 
         // Assert
-        $this->assertTrue($response['success']);
-        $this->assertEquals('DTE signed successfully', $response['message']);
-        $this->assertEquals($signedJws, $response['data']);
+        self::assertTrue($response['success']);
+        self::assertEquals('DTE signed successfully', $response['message']);
+        self::assertEquals($signedJws, $response['data']);
     }
 
     public function testSuccessResponseWithCustomMessage(): void
@@ -34,9 +34,9 @@ class ResponseBuilderTest extends TestCase
         $response = ResponseBuilder::success($signedJws, $customMessage);
 
         // Assert
-        $this->assertTrue($response['success']);
-        $this->assertEquals($customMessage, $response['message']);
-        $this->assertEquals($signedJws, $response['data']);
+        self::assertTrue($response['success']);
+        self::assertEquals($customMessage, $response['message']);
+        self::assertEquals($signedJws, $response['data']);
     }
 
     public function testErrorResponse(): void
@@ -52,10 +52,10 @@ class ResponseBuilderTest extends TestCase
         $response = ResponseBuilder::error($exception);
 
         // Assert
-        $this->assertFalse($response['success']);
-        $this->assertEquals('Test error message', $response['message']);
-        $this->assertEquals('COD_TEST', $response['errorCode']);
-        $this->assertEquals(['Test error detail'], $response['errors']);
+        self::assertFalse($response['success']);
+        self::assertEquals('Test error message', $response['message']);
+        self::assertEquals('COD_TEST', $response['errorCode']);
+        self::assertEquals(['Test error detail'], $response['errors']);
     }
 
     public function testGenericErrorResponse(): void
@@ -69,10 +69,10 @@ class ResponseBuilderTest extends TestCase
         $response = ResponseBuilder::genericError($message, $errorCode, $errors);
 
         // Assert
-        $this->assertFalse($response['success']);
-        $this->assertEquals($message, $response['message']);
-        $this->assertEquals($errorCode, $response['errorCode']);
-        $this->assertEquals($errors, $response['errors']);
+        self::assertFalse($response['success']);
+        self::assertEquals($message, $response['message']);
+        self::assertEquals($errorCode, $response['errorCode']);
+        self::assertEquals($errors, $response['errors']);
     }
 
     public function testGenericErrorResponseWithDefaults(): void
@@ -84,10 +84,10 @@ class ResponseBuilderTest extends TestCase
         $response = ResponseBuilder::genericError($message);
 
         // Assert
-        $this->assertFalse($response['success']);
-        $this->assertEquals($message, $response['message']);
-        $this->assertEquals('COD_500', $response['errorCode']);
-        $this->assertEquals([], $response['errors']);
+        self::assertFalse($response['success']);
+        self::assertEquals($message, $response['message']);
+        self::assertEquals('COD_500', $response['errorCode']);
+        self::assertEquals([], $response['errors']);
     }
 
     public function testSuccessResponseWithCertificateDates(): void
@@ -103,10 +103,10 @@ class ResponseBuilderTest extends TestCase
         $response = ResponseBuilder::success($signedJws, 'DTE signed successfully', $certificateDates);
 
         // Assert
-        $this->assertTrue($response['success']);
-        $this->assertEquals($signedJws, $response['data']);
-        $this->assertEquals('2025-01-01T00:00:00', $response['notBefore']);
-        $this->assertEquals('2026-01-01T00:00:00', $response['notAfter']);
+        self::assertTrue($response['success']);
+        self::assertEquals($signedJws, $response['data']);
+        self::assertEquals('2025-01-01T00:00:00', $response['notBefore']);
+        self::assertEquals('2026-01-01T00:00:00', $response['notAfter']);
     }
 
     public function testSuccessResponseWithoutCertificateDates(): void
@@ -118,9 +118,9 @@ class ResponseBuilderTest extends TestCase
         $response = ResponseBuilder::success($signedJws);
 
         // Assert
-        $this->assertTrue($response['success']);
-        $this->assertArrayNotHasKey('notBefore', $response);
-        $this->assertArrayNotHasKey('notAfter', $response);
+        self::assertTrue($response['success']);
+        self::assertArrayNotHasKey('notBefore', $response);
+        self::assertArrayNotHasKey('notAfter', $response);
     }
 
     public function testVerificationSuccessResponse(): void
@@ -133,8 +133,8 @@ class ResponseBuilderTest extends TestCase
         $response = ResponseBuilder::verificationSuccess($payload, $message);
 
         // Assert
-        $this->assertTrue($response['success']);
-        $this->assertEquals($message, $response['message']);
-        $this->assertEquals($payload, $response['data']);
+        self::assertTrue($response['success']);
+        self::assertEquals($message, $response['message']);
+        self::assertEquals($payload, $response['data']);
     }
 }

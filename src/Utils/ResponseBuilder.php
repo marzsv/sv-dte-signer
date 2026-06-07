@@ -30,11 +30,11 @@ class ResponseBuilder
             'data' => $signedJws,
         ];
 
-        if (!empty($certificateDates['notBefore'])) {
+        if (isset($certificateDates['notBefore']) && $certificateDates['notBefore'] !== '') {
             $response['notBefore'] = $certificateDates['notBefore'];
         }
 
-        if (!empty($certificateDates['notAfter'])) {
+        if (isset($certificateDates['notAfter']) && $certificateDates['notAfter'] !== '') {
             $response['notAfter'] = $certificateDates['notAfter'];
         }
 
